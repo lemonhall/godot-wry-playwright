@@ -59,10 +59,10 @@
 | Req ID | v3 plan item | tests/commands | Evidence target | Status |
 |---|---|---|---|---|
 | REQ-101 | `v3-cli-command-catalog.md` | command map check | coverage PASS | doing |
-| REQ-102 | `v3-cli-command-catalog.md` + `v3-api-surface-and-contract.md` | command map check | non-empty mapping | doing |
+| REQ-102 | `v3-cli-command-catalog.md` + `v3-api-surface-and-contract.md` | command map check + runtime coverage gate | non-empty mapping + covered runtime API | doing |
 | REQ-103 | `v3-api-surface-and-contract.md` | grep naming rule | naming section exists | doing |
-| REQ-104 | `v3-cli-command-catalog.md` | markdown signature check | signature per command | doing |
-| REQ-105 | `v3-api-surface-and-contract.md` | grep envelope model | async contract documented | doing |
+| REQ-104 | `v3-cli-command-catalog.md` | markdown signature check + runtime suite | signature per command + runnable behavior evidence | doing |
+| REQ-105 | `v3-api-surface-and-contract.md` | grep envelope model + runtime suite | async contract documented + envelope observed in tests | doing |
 | REQ-106 | `v3-index.md` + domain plans | support matrix checks | per-domain matrix | doing |
 | REQ-107 | `v3-index.md` | plan index checks | split plan files listed | doing |
 | REQ-108 | `v3-migration-and-ux.md` | grep alias/deprecation | migration path documented | todo |
@@ -83,6 +83,8 @@
 - M3.1 slice3 check: `python3 scripts/check_v3_core_m31_slice3.py`
 - M3.1 behavior contract check: `python3 scripts/check_v3_core_m31_behavior_contract.py`
 - M3.2 contract check: `python3 scripts/check_v3_capture_storage_tabs_contract.py`
+- M3.1/M3.2 runtime API coverage gate: `python3 scripts/check_v3_runtime_test_coverage.py`
+- M3.1/M3.2 runtime coverage matrix: `python3 scripts/check_v3_runtime_test_coverage.py --report-md docs/plan/v3-runtime-coverage-matrix.md --report-json docs/plan/v3-runtime-coverage-matrix.json`
 - M3.x runtime validation (Windows Godot): `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite wry_pw_session`
 
 ## 8) Gap Review (2026-02-06)
@@ -95,3 +97,10 @@
   - Capture/storage/tabs behaviors (`test_wry_pw_session_capture_storage_tabs_runtime.gd`)
   - Start/resize mode guardrails (`test_wry_pw_session_start_modes_runtime.gd`)
 - Result: "M3.1/M3.2 done" now requires both static contract checks and runtime suite pass on Windows Godot.
+
+## 9) M3.3 Scope Clarification (2026-02-06)
+
+- M3.3 当前状态是“规划中（todo）”，不是“已实现”。
+- `v3-cli-command-catalog.md` 中 M3.3 条目维持 `missing`，避免文档与代码现实不一致。
+- 对 `route/devtools/tracing/video/install/runtime-session-manager`，先明确可行性与降级契约，再进入实现。
+- 任何 M3.3 条目改为 `implemented_*` 前，必须有 runtime 测试与门禁证据。

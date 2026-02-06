@@ -1,6 +1,9 @@
 ﻿extends RefCounted
 
 
+const SESSION_SCRIPT := preload("res://addons/godot_wry_playwright/wry_pw_session.gd")
+
+
 static func fail_and_quit(tree: SceneTree, message: String) -> void:
 	push_error(message)
 	print("TEST_FAIL: %s" % message)
@@ -37,7 +40,7 @@ static func parse_json_or_null(raw_json: String) -> Variant:
 
 
 static func create_session(tree: SceneTree, pending: Dictionary, auto_start: bool = false) -> Node:
-	var session = WryPwSession.new()
+	var session = SESSION_SCRIPT.new()
 	session.auto_start = auto_start
 	tree.get_root().add_child(session)
 	session.completed.connect(func(request_id: int, ok: bool, result_json: String, error: String) -> void:

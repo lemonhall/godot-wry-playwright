@@ -1,0 +1,115 @@
+extends Node
+
+const _ToolRegistryScript := preload("res://addons/openagentic/core/OAToolRegistry.gd")
+const _PermissionGateScript := preload("res://addons/openagentic/core/OAAskOncePermissionGate.gd")
+const _SessionStoreScript := preload("res://addons/openagentic/core/OAJsonlNpcSessionStore.gd")
+const _ToolRunnerScript := preload("res://addons/openagentic/core/OAToolRunner.gd")
+const _AgentRuntimeScript := preload("res://addons/openagentic/runtime/OAAgentRuntime.gd")
+const _OpenAIProviderScript := preload("res://addons/openagentic/providers/OAOpenAIResponsesProvider.gd")
+const _OAPaths := preload("res://addons/openagentic/core/OAPaths.gd")
+const _OATavilyConfig := preload("res://addons/openagentic/core/OATavilyConfig.gd")
+const _OATavilyConfigStore := preload("res://addons/openagentic/core/OATavilyConfigStore.gd")
+const _HookEngineScript := preload("res://addons/openagentic/hooks/OAHookEngine.gd")
+
+var save_id: String = ""
+
+var provider = null
+var model: String = ""
+var system_prompt: String = ""
+var tools = _ToolRegistryScript.new()
+var permission_gate = _PermissionGateScript.new()
+var hooks = _HookEngineScript.new()
+
+func set_save_id(id: String) -> void:
+	save_id = id
+
+func configure_proxy_openai_responses(base_url: String, model_name: String, auth_header: String = "", auth_token: String = "", is_bearer: bool = true) -> void:
+	provider = _OpenAIProviderScript.new(base_url, auth_header, auth_token, is_bearer)
+	model = model_name
+
+func register_tool(tool) -> void:
+	tools.register(tool)
+
+func enable_default_tools() -> void:
+	# Registers the standard OpenCode-style toolset (no Bash):
+	# - Read/Write/Edit
+	# - Glob/Grep
+	# - WebFetch/WebSearch
+	# - TodoWrite
+	# - Skill
+	# All filesystem tools are scoped to the per-NPC workspace.
+	OAStandardTools.register_into(self)
+
+func enable_npc_workspace_tools() -> void:
+	# Back-compat alias.
+	enable_default_tools()
+
+func set_approver(approver: Callable) -> void:
+	permission_gate = _PermissionGateScript.new(approver)
+
+func add_pre_tool_hook(name: String, tool_name_pattern: String, hook: Callable, is_async: bool = false) -> void:
+	if hooks == null:
+		hooks = _HookEngineScript.new()
+	hooks.add_pre_tool_use(name, tool_name_pattern, hook, is_async)
+
+func add_post_tool_hook(name: String, tool_name_pattern: String, hook: Callable, is_async: bool = false) -> void:
+	if hooks == null:
+		hooks = _HookEngineScript.new()
+	hooks.add_post_tool_use(name, tool_name_pattern, hook, is_async)
+
+func add_before_turn_hook(name: String, npc_id_pattern: String, hook: Callable, is_async: bool = false) -> void:
+	if hooks == null:
+		hooks = _HookEngineScript.new()
+	hooks.add_before_turn(name, npc_id_pattern, hook, is_async)
+
+func add_after_turn_hook(name: String, npc_id_pattern: String, hook: Callable, is_async: bool = false) -> void:
+	if hooks == null:
+		hooks = _HookEngineScript.new()
+	hooks.add_after_turn(name, npc_id_pattern, hook, is_async)
+
+func run_npc_turn(npc_id: String, user_text: String, on_event: Callable) -> void:
+	if save_id.strip_edges() == "":
+		push_error("OpenAgentic.save_id is required")
+		return
+	if provider == null:
+		push_error("OpenAgentic.provider is not configured")
+		return
+	if model.strip_edges() == "":
+		push_error("OpenAgentic.model is required")
+		return
+	# Make the default tool suite available unless the host game overrides it.
+	# This keeps NPCs consistent across scenes and avoids "tools are missing" surprises.
+	if typeof(tools) == TYPE_OBJECT and tools != null and tools.has_method("names"):
+		var names0: Array = tools.names()
+		if names0.is_empty():
+			enable_default_tools()
+
+	var store = _SessionStoreScript.new(save_id)
+	var env_tavily: Dictionary = _OATavilyConfig.from_environment()
+	var tavily_base_url := String(env_tavily.get("base_url", "")).strip_edges()
+	var tavily_key := String(env_tavily.get("api_key", "")).strip_edges()
+	if save_id.strip_edges() != "":
+		var rd: Dictionary = _OATavilyConfigStore.load_config(save_id)
+		if bool(rd.get("ok", false)) and typeof(rd.get("config", null)) == TYPE_DICTIONARY:
+			var cfg: Dictionary = rd.get("config", {})
+			var base2 := String(cfg.get("base_url", "")).strip_edges()
+			var key2 := String(cfg.get("api_key", "")).strip_edges()
+			if base2 != "":
+				tavily_base_url = base2
+			if key2 != "":
+				tavily_key = key2
+	var runner = _ToolRunnerScript.new(tools, permission_gate, store, func(session_id: String, _tool_call: Dictionary) -> Dictionary:
+		var sid := save_id
+		var nid := session_id
+		return {
+			"save_id": sid,
+			"npc_id": nid,
+			"workspace_root": _OAPaths.npc_workspace_dir(sid, nid),
+			"tavily_api_key": tavily_key,
+			"tavily_base_url": tavily_base_url,
+			"allow_private_networks": false,
+		}
+	, hooks)
+	var rt = _AgentRuntimeScript.new(store, runner, tools, provider, model, hooks)
+	rt.set_system_prompt(system_prompt)
+	await rt.run_turn(npc_id, user_text, on_event, save_id)

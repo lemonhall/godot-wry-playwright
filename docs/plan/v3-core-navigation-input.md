@@ -43,6 +43,16 @@
 4) Green verify: 域内命令测试通过。
 5) Refactor: 抽出统一输入事件转换器与错误处理。
 
+## Verification
+
+- `python3 scripts/check_v3_core_api_surface.py`
+- `python3 scripts/check_v3_core_m31_slice2.py`
+- `python3 scripts/check_v3_core_m31_slice3.py`
+- `python3 scripts/check_v3_core_m31_behavior_contract.py`
+- `python3 scripts/check_v3_runtime_test_coverage.py`
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -One tests\test_wry_pw_session_core_runtime.gd`
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -One tests\test_wry_pw_session_upload_runtime.gd`
+
 ## Risks
 
 - `ref` 与 `selector` 的兼容策略若未统一，会造成行为分叉。

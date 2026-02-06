@@ -48,6 +48,8 @@
 
 - `python3 scripts/check_v3_capture_storage_tabs_contract.py`
 - `python3 scripts/check_v3_core_m31_behavior_contract.py`
+- `python3 scripts/check_v3_runtime_test_coverage.py`
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -One tests\test_wry_pw_session_capture_storage_tabs_runtime.gd`
 - `python3 scripts/check_playwright_cli_command_map.py --cli-doc playwright-cli.md --catalog docs/plan/v3-cli-command-catalog.md`
 
 ## Risks

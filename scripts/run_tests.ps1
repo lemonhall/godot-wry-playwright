@@ -3,6 +3,10 @@ param(
   [switch]$SkipDoc,
   [switch]$SkipRust,
   [switch]$SkipGodotRuntime,
+  [switch]$SkipV3RuntimeCoverageCheck,
+  [switch]$EmitCoverageReport,
+  [string]$CoverageReportMd = "docs/plan/v3-runtime-coverage-matrix.md",
+  [string]$CoverageReportJson = "docs/plan/v3-runtime-coverage-matrix.json",
   [switch]$SkipSceneCheck,
   [switch]$SkipV3CoreApiCheck,
   [switch]$SkipV3M31Slice2Check,
@@ -100,6 +104,26 @@ try {
     Invoke-Step -Name "Godot runtime tests (WryPwSession)" -Action {
       powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "wry_pw_session"
     }
+  }
+
+  if (-not $SkipV3RuntimeCoverageCheck) {
+    Invoke-Step -Name "v3 runtime test coverage gate" -Action {
+      $coverageArgs = @("scripts/check_v3_runtime_test_coverage.py")
+
+      if ($EmitCoverageReport) {
+        if (-not [string]::IsNullOrWhiteSpace($CoverageReportMd)) {
+          $coverageArgs += @("--report-md", $CoverageReportMd)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($CoverageReportJson)) {
+          $coverageArgs += @("--report-json", $CoverageReportJson)
+        }
+      }
+
+      Invoke-Python $coverageArgs
+    }
+  }
+  elseif ($EmitCoverageReport) {
+    Write-Host "EmitCoverageReport ignored because SkipV3RuntimeCoverageCheck is set." -ForegroundColor Yellow
   }
 
   if (-not $SkipSceneCheck) {

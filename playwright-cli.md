@@ -64,6 +64,8 @@ playwright-cli sessionstorage-get <k>   # get sessionStorage value
 playwright-cli sessionstorage-set <k> <v> # set sessionStorage value
 playwright-cli sessionstorage-delete <k>  # delete sessionStorage entry
 playwright-cli sessionstorage-clear     # clear all sessionStorage
+
+
 Network
 playwright-cli route <pattern> [opts]   # mock network requests
 playwright-cli route-list               # list active routes
@@ -79,6 +81,7 @@ playwright-cli video-stop [filename]    # stop video recording
 Install
 playwright-cli install --skills         # install skills
 playwright-cli install-browser          # install browser
+
 Configuration
 playwright-cli config [options]         # configure session settings
 playwright-cli open --browser=chrome    # use specific browser
@@ -88,6 +91,7 @@ playwright-cli open --profile=<path>    # use custom profile directory
 playwright-cli open --config=file.json  # use config file
 playwright-cli close                    # close the browser
 playwright-cli delete-data              # delete user data for default session
+
 Sessions
 playwright-cli -s=name <cmd>            # run command in named session
 playwright-cli -s=name close            # stop a named browser
