@@ -6,7 +6,7 @@ Upgrade `res://demo/texture_3d.tscn` from a synthetic box demo to a computer-mod
 
 ## PRD Trace
 
-PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015
+PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 
 ## Scope
 
@@ -20,6 +20,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015
   - RMB orbit
   - MMB pan
 - Add key `5` action (`reload_page`) and logic to reload URL and refresh one frame.
+- Add WebView-side auto fit-width script so page defaults to no horizontal scroll in texture mode.
 
 ### Out of scope
 
@@ -34,6 +35,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015
 - A3 (REQ-014): running scene supports RMB orbit, MMB pan, mouse wheel zoom with no script errors.
 - A4 (REQ-015): pressing key `5` reloads current URL (`https://example.com`) and screen gets a newly refreshed frame.
 - A5: per-load capture policy stays deterministic: exactly one displayed frame per navigation cycle unless user triggers reload key again.
+- A6 (REQ-016): page capture defaults to width-fit behavior and horizontal scrolling is disabled by injected script.
 
 ## Verification
 
@@ -67,6 +69,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015
 - Move: `godot-wry-playwright/Computer_Computer Texture.png.import` → `godot-wry-playwright/assets/models/computer/Computer_Computer Texture.png.import`
 - Modify: `godot-wry-playwright/demo/texture_3d.tscn`
 - Modify: `godot-wry-playwright/demo/texture_3d.gd`
+- Modify: `crates/godot_wry_playwright/src/wry_texture_browser.rs`
 - Modify: `docs/plan/v2-index.md`
 - Modify: `docs/plan/v2-texture-mode.md`
 
@@ -75,6 +78,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015
 - R1: Overlay quad placement may need iterative offset tuning due to source model scale/pivot.
 - R2: Camera input may conflict with editor shortcut expectations if action names overlap.
 - R3: Reload may start capture too early if navigation-state reset is missing.
+- R4: Some sites may override zoom/CSS after load; fit-width is best-effort for the MVP scene.
 
 ## Steps (Tashan + TDD)
 

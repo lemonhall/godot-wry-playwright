@@ -30,6 +30,6 @@ transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0)
 
 [node name="WebScreen" type="MeshInstance3D" parent="ComputerRoot" unique_id=1114221005]
 unique_name_in_owner = true
-transform = Transform3D(1.2942085, 0, 0, 0, 1.184463, 0, 0, 0, 1, 0.005497873, 1.6774213, 0.07280445)
+transform = Transform3D(1.3382504, 0, 0, 0, 1.1964288, 0, 0, 0, 1, -0.014196932, 1.6774213, 0.045431316)
 material_override = SubResource("ShaderMaterial_1")
 mesh = SubResource("QuadMesh_1")

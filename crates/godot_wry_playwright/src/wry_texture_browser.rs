@@ -93,6 +93,43 @@ mod backend {
     Ok(())
   }
 
+  fn fit_width_script() -> &'static str {
+    r#"
+(() => {
+  const applyTextureFitWidth = () => {
+    const docEl = document.documentElement;
+    const body = document.body;
+
+    if (!docEl || !body) {
+      return;
+    }
+
+    const clientWidth = Math.max(1, docEl.clientWidth || window.innerWidth || 1);
+    const scrollWidth = Math.max(clientWidth, body.scrollWidth || 0, docEl.scrollWidth || 0);
+    const fitScale = Math.min(1, clientWidth / scrollWidth);
+
+    body.style.transformOrigin = 'top left';
+    body.style.transform = `scale(${fitScale})`;
+    body.style.width = `${100 / fitScale}%`;
+    body.style.margin = '0';
+
+    docEl.style.overflowX = 'hidden';
+    body.style.overflowX = 'hidden';
+  };
+
+  if (!window.__gwry_texture_fit_width_bound__) {
+    window.__gwry_texture_fit_width_bound__ = true;
+    window.addEventListener('resize', () => applyTextureFitWidth(), { passive: true });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => applyTextureFitWidth(), { once: true });
+    }
+  }
+
+  applyTextureFitWidth();
+})();
+"#
+  }
+
   fn url_from_webview(webview: &ICoreWebView2) -> Result<String, WinError> {
     let mut pwstr = windows::core::PWSTR::null();
     unsafe { webview.Source(&mut pwstr)? };
@@ -258,6 +295,7 @@ mod backend {
       // IPC bridge + our automation shim.
       let _ = add_script(&webview, "Object.defineProperty(window, 'ipc', { value: Object.freeze({ postMessage: s=> window.chrome.webview.postMessage(s) }) });".to_string());
       let _ = add_script(&webview, automation_shim_js().to_string());
+      let _ = add_script(&webview, fit_width_script().to_string());
 
       // A small ticker to drive timeouts + capture scheduling.
       let tick_proxy = proxy.clone();

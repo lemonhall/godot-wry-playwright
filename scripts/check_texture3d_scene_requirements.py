@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TS_CN = ROOT / "godot-wry-playwright/demo/texture_3d.tscn"
 TS_GD = ROOT / "godot-wry-playwright/demo/texture_3d.gd"
 MODEL_GLB = ROOT / "godot-wry-playwright/assets/models/computer/Computer.glb"
+WTB_RS = ROOT / "crates/godot_wry_playwright/src/wry_texture_browser.rs"
 
 
 def fail(msg: str) -> None:
@@ -38,12 +39,15 @@ def main() -> int:
     ok("legacy root model removed")
 
     expect(TS_CN, r"path=\"res://assets/models/computer/Computer\.glb\"", "scene references moved GLB")
-    expect(TS_CN, r"\[node name=\"WebScreen\" type=\"MeshInstance3D\" parent=\"ComputerRoot\"\]", "web screen overlay node exists")
+    expect(TS_CN, r"\[node name=\"WebScreen\" type=\"MeshInstance3D\" parent=\"ComputerRoot\"[^\]]*\]", "web screen overlay node exists")
 
     expect(TS_GD, r"func _unhandled_input\(event: InputEvent\)", "camera input handler exists")
     expect(TS_GD, r"event\.is_action_pressed\(\"reload_page\"\)", "reload action branch exists")
     expect(TS_GD, r"KEY_5", "key 5 fallback exists")
     expect(TS_GD, r"_begin_navigation_cycle\(\)", "navigation cycle reset hook exists")
+
+    expect(WTB_RS, r"applyTextureFitWidth", "fit-width JS helper exists")
+    expect(WTB_RS, r"overflowX\s*=\s*'hidden'", "fit-width script hides horizontal overflow")
 
     print("PASS: texture_3d static requirements satisfied")
     return 0
