@@ -4,9 +4,9 @@
 # Rust build artifacts
 **/target/
 
-# Godot editor/cache artifacts
-godot-wry-playwright/.godot/
+# Godot editor/cache artifacts (keep extension enable-list tracked for demo)
+godot-wry-playwright/.godot/*
+!godot-wry-playwright/.godot/extension_list.cfg
 
 # Extension build outputs copied into the Godot project
 godot-wry-playwright/addons/**/bin/
-

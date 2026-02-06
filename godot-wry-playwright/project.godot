@@ -15,10 +15,6 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 run/main_scene="res://demo/demo.tscn"
 
-[gdextension]
-
-godot_wry_playwright="res://addons/godot_wry_playwright/godot_wry_playwright.gdextension"
-
 [physics]
 
 3d/physics_engine="Jolt Physics"
