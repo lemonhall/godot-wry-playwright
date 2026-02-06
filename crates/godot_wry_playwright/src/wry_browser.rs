@@ -354,6 +354,20 @@ impl INode for WryBrowser {
   }
 
   fn process(&mut self, _delta: f64) {
+    self.drain_responses();
+  }
+
+  fn exit_tree(&mut self) {
+    self.stop();
+  }
+}
+
+#[godot_api]
+impl WryBrowser {
+  #[signal]
+  fn completed(request_id: i64, ok: bool, result_json: String, error: String);
+
+  fn drain_responses(&mut self) {
     let mut drained: Vec<BrowserResponse> = Vec::new();
     if let Some(rx) = &self.rx {
       while let Ok(resp) = rx.try_recv() {
@@ -377,15 +391,10 @@ impl INode for WryBrowser {
     }
   }
 
-  fn exit_tree(&mut self) {
-    self.stop();
+  #[func]
+  fn pump(&mut self) {
+    self.drain_responses();
   }
-}
-
-#[godot_api]
-impl WryBrowser {
-  #[signal]
-  fn completed(request_id: i64, ok: bool, result_json: String, error: String);
 
   #[cfg(windows)]
   fn ensure_backend(&mut self) -> bool {
@@ -417,6 +426,7 @@ impl WryBrowser {
   fn start(&mut self) -> bool {
     #[cfg(windows)]
     {
+      self.base_mut().set_process(true);
       if !self.ensure_backend() {
         return false;
       }
@@ -437,6 +447,7 @@ impl WryBrowser {
   fn start_view(&mut self, x: i32, y: i32, w: i32, h: i32) -> bool {
     #[cfg(windows)]
     {
+      self.base_mut().set_process(true);
       if !self.ensure_backend() {
         return false;
       }
@@ -474,6 +485,7 @@ impl WryBrowser {
   fn stop(&mut self) {
     #[cfg(windows)]
     {
+      self.base_mut().set_process(false);
       if let Some(proxy) = self.proxy.take() {
         let _ = proxy.send_event(backend::UserEvent::Stop);
       }

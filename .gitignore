@@ -10,3 +10,6 @@ godot-wry-playwright/.godot/*
 
 # Extension build outputs copied into the Godot project
 godot-wry-playwright/addons/**/bin/
+
+#godot user logs and test logs
+.godot-user

@@ -83,3 +83,15 @@
 - M3.1 slice3 check: `python3 scripts/check_v3_core_m31_slice3.py`
 - M3.1 behavior contract check: `python3 scripts/check_v3_core_m31_behavior_contract.py`
 - M3.2 contract check: `python3 scripts/check_v3_capture_storage_tabs_contract.py`
+- M3.x runtime validation (Windows Godot): `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite wry_pw_session`
+
+## 8) Gap Review (2026-02-06)
+
+- Prior issue: v3 M3.1/M3.2 "done" primarily depended on static scripts; runtime `test_*.gd` coverage was missing.
+- Action: added deterministic Windows runtime suite under `godot-wry-playwright/tests/` and wired it into `scripts/run_tests.ps1`.
+- Runtime scope now includes:
+  - Core/navigation/input roundtrip (`test_wry_pw_session_core_runtime.gd`)
+  - Upload/file semantics (`test_wry_pw_session_upload_runtime.gd`)
+  - Capture/storage/tabs behaviors (`test_wry_pw_session_capture_storage_tabs_runtime.gd`)
+  - Start/resize mode guardrails (`test_wry_pw_session_start_modes_runtime.gd`)
+- Result: "M3.1/M3.2 done" now requires both static contract checks and runtime suite pass on Windows Godot.

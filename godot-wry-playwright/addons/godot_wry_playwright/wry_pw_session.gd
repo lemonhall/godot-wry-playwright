@@ -25,9 +25,15 @@ func _ready() -> void:
 	_browser = WryBrowser.new()
 	add_child(_browser)
 	_browser.completed.connect(_on_browser_completed)
+	set_process(true)
 
 	if auto_start:
 		_ensure_started()
+
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(_browser):
+		_browser.pump()
 
 
 func _on_browser_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:

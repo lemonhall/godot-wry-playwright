@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GWry Session Fixture</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 12px; }
+    #mouse_area { width: 220px; height: 120px; border: 1px solid #999; margin-top: 12px; }
+    #hover_target { padding: 6px; margin-top: 8px; border: 1px dashed #666; width: 180px; }
+  </style>
+</head>
+<body>
+  <h1 id="title">GWry Fixture</h1>
+
+  <label>
+    Input
+    <input id="text_input" type="text" value="" />
+  </label>
+  <button id="submit_btn" type="button">Submit</button>
+  <p id="status">idle</p>
+
+  <label>
+    Checkbox
+    <input id="check_input" type="checkbox" />
+  </label>
+  <p id="check_status">unchecked</p>
+
+  <label>
+    Color
+    <select id="color_select">
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+    </select>
+  </label>
+  <p id="select_status">red</p>
+
+  <label>
+    Upload
+    <input id="upload_input" type="file" multiple />
+  </label>
+  <p id="upload_status">none</p>
+
+  <div id="hover_target">hover me</div>
+  <div id="mouse_area">mouse area</div>
+  <p id="event_status">events:0</p>
+
+  <script>
+    window.__fixture = {
+      submit_count: 0,
+      hover_count: 0,
+      keydown_count: 0,
+      keyup_count: 0,
+      keypress_count: 0,
+      mousemove_count: 0,
+      mousedown_count: 0,
+      mouseup_count: 0,
+      wheel_count: 0,
+      last_key: "",
+      files: [],
+    };
+
+    const textInput = document.querySelector("#text_input");
+    const submitBtn = document.querySelector("#submit_btn");
+    const status = document.querySelector("#status");
+    const checkInput = document.querySelector("#check_input");
+    const checkStatus = document.querySelector("#check_status");
+    const colorSelect = document.querySelector("#color_select");
+    const selectStatus = document.querySelector("#select_status");
+    const uploadInput = document.querySelector("#upload_input");
+    const uploadStatus = document.querySelector("#upload_status");
+    const hoverTarget = document.querySelector("#hover_target");
+    const mouseArea = document.querySelector("#mouse_area");
+    const eventStatus = document.querySelector("#event_status");
+
+    function updateEventStatus() {
+      const total =
+        window.__fixture.keydown_count +
+        window.__fixture.keyup_count +
+        window.__fixture.keypress_count +
+        window.__fixture.mousemove_count +
+        window.__fixture.mousedown_count +
+        window.__fixture.mouseup_count +
+        window.__fixture.wheel_count;
+      eventStatus.textContent = `events:${total}`;
+    }
+
+    submitBtn.addEventListener("click", () => {
+      window.__fixture.submit_count += 1;
+      status.textContent = `submitted:${textInput.value}`;
+    });
+
+    checkInput.addEventListener("change", () => {
+      checkStatus.textContent = checkInput.checked ? "checked" : "unchecked";
+    });
+
+    colorSelect.addEventListener("change", () => {
+      selectStatus.textContent = colorSelect.value;
+    });
+
+    uploadInput.addEventListener("change", () => {
+      const names = Array.from(uploadInput.files || []).map((item) => item.name);
+      window.__fixture.files = names;
+      uploadStatus.textContent = names.join(",");
+    });
+
+    hoverTarget.addEventListener("mouseenter", () => {
+      window.__fixture.hover_count += 1;
+    });
+
+    textInput.addEventListener("keydown", (event) => {
+      window.__fixture.keydown_count += 1;
+      window.__fixture.last_key = String(event.key || "");
+      updateEventStatus();
+    });
+    textInput.addEventListener("keyup", (event) => {
+      window.__fixture.keyup_count += 1;
+      window.__fixture.last_key = String(event.key || "");
+      updateEventStatus();
+    });
+    textInput.addEventListener("keypress", (event) => {
+      window.__fixture.keypress_count += 1;
+      window.__fixture.last_key = String(event.key || "");
+      updateEventStatus();
+    });
+
+    mouseArea.addEventListener("mousemove", () => {
+      window.__fixture.mousemove_count += 1;
+      updateEventStatus();
+    });
+    mouseArea.addEventListener("mousedown", () => {
+      window.__fixture.mousedown_count += 1;
+      updateEventStatus();
+    });
+    mouseArea.addEventListener("mouseup", () => {
+      window.__fixture.mouseup_count += 1;
+      updateEventStatus();
+    });
+    mouseArea.addEventListener("wheel", () => {
+      window.__fixture.wheel_count += 1;
+      updateEventStatus();
+    });
+
+    setTimeout(() => {
+      const late = document.createElement("div");
+      late.id = "late_node";
+      late.textContent = "late-ready";
+      document.body.appendChild(late);
+    }, 300);
+  </script>
+</body>
+</html>
+

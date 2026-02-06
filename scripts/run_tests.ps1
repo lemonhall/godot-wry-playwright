@@ -2,6 +2,7 @@ param(
   [switch]$Quick,
   [switch]$SkipDoc,
   [switch]$SkipRust,
+  [switch]$SkipGodotRuntime,
   [switch]$SkipSceneCheck,
   [switch]$SkipV3CoreApiCheck,
   [switch]$SkipV3M31Slice2Check,
@@ -92,6 +93,12 @@ try {
       Invoke-Step -Name "Rust tests: pending requests" -Action {
         cargo test -p godot_wry_playwright --test pending_requests_test
       }
+    }
+  }
+
+  if (-not $SkipGodotRuntime) {
+    Invoke-Step -Name "Godot runtime tests (WryPwSession)" -Action {
+      powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "wry_pw_session"
     }
   }
 
