@@ -153,7 +153,6 @@ func _setup_tool_session_driver() -> void:
 
 
 func _on_tool_session_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:
-	print("tool_session.completed id=", request_id, " ok=", ok, " error=", error)
 	_tool_session_pending[request_id] = {
 		"ok": ok,
 		"result_json": result_json,
@@ -542,22 +541,6 @@ func _tool_browser_eval(input: Dictionary, _ctx: Dictionary) -> Variant:
 	if script == "":
 		return {"ok": false, "error": "missing_script"}
 	var timeout_ms := _tool_timeout(input, TOOL_TIMEOUT_DEFAULT_MS)
-	if _use_session_tool_driver():
-		if _tool_session == null:
-			return {"ok": false, "error": "tool_session_not_ready"}
-		var request_id_session := _tool_session.eval(script, "", timeout_ms)
-		var response_session: Dictionary = await _await_tool_session_request(request_id_session, timeout_ms + 1_500)
-		if not bool(response_session.get("ok", false)):
-			return {
-				"ok": false,
-				"request_id": request_id_session,
-				"error": String(response_session.get("error", "eval_failed")),
-			}
-		return {
-			"ok": true,
-			"request_id": request_id_session,
-			"value": _parse_json_value(String(response_session.get("result_json", "null")), false),
-		}
 	return await _execute_browser_eval(script, timeout_ms)
 
 
@@ -636,6 +619,25 @@ func _tool_browser_title(input: Dictionary, _ctx: Dictionary) -> Variant:
 
 
 func _execute_browser_eval(script: String, timeout_ms: int) -> Dictionary:
+	if _use_session_tool_driver():
+		if _tool_session == null:
+			return {"ok": false, "error": "tool_session_not_ready"}
+
+		var request_id_session := _tool_session.eval(script, "", timeout_ms)
+		var response_session: Dictionary = await _await_tool_session_request(request_id_session, timeout_ms + 1_500)
+		if not bool(response_session.get("ok", false)):
+			return {
+				"ok": false,
+				"request_id": request_id_session,
+				"error": String(response_session.get("error", "eval_failed")),
+			}
+
+		return {
+			"ok": true,
+			"request_id": request_id_session,
+			"value": _parse_json_value(String(response_session.get("result_json", "null")), false),
+		}
+
 	if _browser == null:
 		return {"ok": false, "error": "browser_not_ready"}
 

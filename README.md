@@ -126,7 +126,7 @@ Expected: `ok: true`.
 By default, `agent_playwright` uses:
 
 - proxy base URL: `http://127.0.0.1:8787/v1`
-- model: `gpt-4.1-mini`
+- model: `gpt-5.2`
 
 You can override in Inspector on `AgentPlaywright` node (`agent_proxy_base_url`, `agent_model`, `agent_auth_token`).
 

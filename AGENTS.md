@@ -41,7 +41,7 @@ Agent path (agent_playwright scene)
   -> OpenAgentic.run_npc_turn(...)
     -> proxy /v1/responses (SSE)
       -> tool.use/tool.result
-        -> browser_* tools -> WryTextureBrowser
+        -> browser_* tools -> WryTextureBrowser (texture) / WryPwSession (session)
           -> overlay chat transcript
 ```
 

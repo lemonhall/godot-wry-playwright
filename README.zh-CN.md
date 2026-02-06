@@ -126,7 +126,7 @@ MVP 目标接口：
 `agent_playwright` 默认配置：
 
 - proxy base URL：`http://127.0.0.1:8787/v1`
-- model：`gpt-4.1-mini`
+- model：`gpt-5.2`
 
 可在 `AgentPlaywright` 节点 Inspector 中覆盖：
 
