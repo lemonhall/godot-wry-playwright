@@ -258,19 +258,26 @@ impl INode for WryBrowser {
   }
 
   fn process(&mut self, _delta: f64) {
-    let Some(rx) = &self.rx else { return };
+    let mut drained: Vec<BrowserResponse> = Vec::new();
+    if let Some(rx) = &self.rx {
+      while let Ok(resp) = rx.try_recv() {
+        drained.push(resp);
+      }
+    }
 
-    while let Ok(resp) = rx.try_recv() {
-      let mut base = self.base.to_gd();
-      base.emit_signal(
-        "completed",
-        &[
-          resp.request_id.to_variant(),
-          resp.ok.to_variant(),
-          resp.result_json.to_variant(),
-          resp.error.to_variant(),
-        ],
-      );
+    for resp in drained {
+      // IMPORTANT: do not emit signals synchronously from Rust methods.
+      // Signal callbacks can re-enter this same Rust object (e.g. user calls `eval()` inside
+      // the `completed` handler), which would trigger a nested mutable bind and panic.
+      // Use Godot's deferred call so the signal is emitted later by the engine (no Rust bind held).
+      let args = [
+        StringName::from("completed").to_variant(),
+        resp.request_id.to_variant(),
+        resp.ok.to_variant(),
+        resp.result_json.to_variant(),
+        resp.error.to_variant(),
+      ];
+      self.base_mut().call_deferred("emit_signal", &args);
     }
   }
 
@@ -300,16 +307,14 @@ impl WryBrowser {
           true
         }
         Err(e) => {
-          let mut base = self.base.to_gd();
-          base.emit_signal(
-            "completed",
-            &[
-              (-1_i64).to_variant(),
-              false.to_variant(),
-              "null".to_variant(),
-              e.to_variant(),
-            ],
-          );
+          let args = [
+            StringName::from("completed").to_variant(),
+            (-1_i64).to_variant(),
+            false.to_variant(),
+            "null".to_variant(),
+            e.to_variant(),
+          ];
+          self.base_mut().call_deferred("emit_signal", &args);
           false
         }
       }
