@@ -3,6 +3,11 @@ param(
   [switch]$SkipDoc,
   [switch]$SkipRust,
   [switch]$SkipSceneCheck,
+  [switch]$SkipV3CoreApiCheck,
+  [switch]$SkipV3M31Slice2Check,
+  [switch]$SkipV3M31Slice3Check,
+  [switch]$SkipV3M31BehaviorContractCheck,
+  [switch]$SkipV3M32CaptureStorageTabsCheck,
   [switch]$RunGodotSmoke,
   [string]$GodotExe = $env:GODOT_WIN_EXE
 )
@@ -93,6 +98,36 @@ try {
   if (-not $SkipSceneCheck) {
     Invoke-Step -Name "Scene static check" -Action {
       Invoke-Python @("scripts/check_texture3d_scene_requirements.py")
+    }
+  }
+
+  if (-not $SkipV3CoreApiCheck) {
+    Invoke-Step -Name "v3 core API surface" -Action {
+      Invoke-Python @("scripts/check_v3_core_api_surface.py")
+    }
+  }
+
+  if (-not $SkipV3M31Slice2Check) {
+    Invoke-Step -Name "v3 M3.1 slice2" -Action {
+      Invoke-Python @("scripts/check_v3_core_m31_slice2.py")
+    }
+  }
+
+  if (-not $SkipV3M31Slice3Check) {
+    Invoke-Step -Name "v3 M3.1 slice3" -Action {
+      Invoke-Python @("scripts/check_v3_core_m31_slice3.py")
+    }
+  }
+
+  if (-not $SkipV3M31BehaviorContractCheck) {
+    Invoke-Step -Name "v3 M3.1 behavior contract" -Action {
+      Invoke-Python @("scripts/check_v3_core_m31_behavior_contract.py")
+    }
+  }
+
+  if (-not $SkipV3M32CaptureStorageTabsCheck) {
+    Invoke-Step -Name "v3 M3.2 capture/storage/tabs contract" -Action {
+      Invoke-Python @("scripts/check_v3_capture_storage_tabs_contract.py")
     }
   }
 

@@ -105,8 +105,13 @@ Notes:
 
 From Windows PowerShell at repo root:
 
-- `scripts\run_tests.ps1` (doc + Rust + scene static checks)
+- `scripts\run_tests.ps1` (doc + Rust + scene + v3 M3.1/M3.2 static checks)
 - `scripts\run_tests.ps1 -Quick` (skip the second Rust test group)
+- `python3 scripts/check_v3_core_api_surface.py` (v3 core API 对齐静态检查)
+- `python3 scripts/check_v3_core_m31_slice2.py` (M3.1 第二刀：dialog/resize 语义静态检查)
+- `python3 scripts/check_v3_core_m31_slice3.py` (M3.1 第三刀：upload/snapshot 文件语义静态检查)
+- `python3 scripts/check_v3_core_m31_behavior_contract.py` (M3.1 行为契约：语义+目录状态联合检查)
+- `python3 scripts/check_v3_capture_storage_tabs_contract.py` (M3.2 capture/storage/tabs 契约静态检查)
 - `scripts\run_tests.ps1 -RunGodotSmoke -GodotExe "E:\\Godot_v4.6-stable_win64.exe\\Godot_v4.6-stable_win64_console.exe"`
 
 ### Running tests (WSL2 + Linux Godot) — recommended for script-only tests
