@@ -3,6 +3,9 @@ use std::sync::mpsc;
 use godot::classes::{INode, Node};
 use godot::prelude::*;
 
+#[cfg(windows)]
+use godot_wry_playwright_core::protocol::Command;
+
 #[derive(Debug, Clone)]
 struct BrowserResponse {
   request_id: i64,
