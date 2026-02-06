@@ -190,6 +190,7 @@ mod backend {
       let mut pending = PendingRequests::new();
       let mut pending_kind: HashMap<i64, &'static str> = Default::default();
       let mut goto_pending: Option<i64> = None;
+      let mut capture_ready = false;
 
       let fps = fps.clamp(1, 30);
       let mut capture_interval = Duration::from_millis((1000 / fps) as u64);
@@ -329,6 +330,8 @@ mod backend {
               return;
             };
 
+            capture_ready = false;
+
             let now_ms = start.elapsed().as_millis() as u64;
             pending.insert(id, now_ms, timeout_ms);
             pending_kind.insert(id, "goto");
@@ -391,6 +394,9 @@ mod backend {
           },
           Event::UserEvent(UserEvent::PageLoadFinished(url)) => {
             if let Some(id) = goto_pending.take() {
+              capture_ready = true;
+              next_capture_at = Instant::now();
+
               pending.complete(id);
               pending_kind.remove(&id);
               let result_json = serde_json::to_string(&url).unwrap_or_else(|_| "\"\"".to_string());
@@ -404,7 +410,7 @@ mod backend {
           }
           Event::UserEvent(UserEvent::Tick) => {
             // Capture scheduling (simulated render).
-            if Instant::now() >= next_capture_at && !capture_in_flight.get() {
+            if capture_ready && Instant::now() >= next_capture_at && !capture_in_flight.get() {
               let Some(wv) = &webview else { return; };
               let Ok(stream) = (unsafe { CreateStreamOnHGlobal(Default::default(), true) }) else { return; };
 

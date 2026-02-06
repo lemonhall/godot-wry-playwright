@@ -68,7 +68,6 @@ func _on_frame_png(png_bytes: PackedByteArray) -> void:
 	if FREEZE_AFTER_FIRST_FRAME and _frame_count == 1:
 		_frozen_after_first_frame = true
 		print("frame capture frozen after first frame")
-		_browser.call_deferred("stop")
 
 
 func _set_reveal(v: float) -> void:
