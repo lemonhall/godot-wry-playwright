@@ -10,6 +10,7 @@ const OA_TOOL_SCRIPT := preload("res://addons/openagentic/core/OATool.gd")
 @onready var chat_input: LineEdit = %ChatInput
 @onready var chat_send_button: Button = %ChatSendButton
 @onready var chat_clear_button: Button = %ChatClearButton
+@onready var chat_panel: Control = $ChatOverlay/Panel
 
 @export_group("Browser")
 @export var capture_width: int = 1024
@@ -591,6 +592,38 @@ func _js_string(value: String) -> String:
 	return JSON.stringify(value)
 
 
+func _is_chat_panel_point(mouse_pos: Vector2) -> bool:
+	if chat_panel == null or not chat_panel.visible:
+		return false
+	return chat_panel.get_global_rect().has_point(mouse_pos)
+
+
+func _scroll_chat_output_with_wheel(button_index: int) -> bool:
+	if chat_output == null:
+		return false
+	var scroll_bar: VScrollBar = chat_output.get_v_scroll_bar()
+	if scroll_bar == null:
+		return false
+	var step: float = max(24.0, float(scroll_bar.page) * 0.15)
+	if button_index == MOUSE_BUTTON_WHEEL_UP:
+		scroll_bar.value = max(scroll_bar.min_value, scroll_bar.value - step)
+		return true
+	if button_index == MOUSE_BUTTON_WHEEL_DOWN:
+		scroll_bar.value = min(scroll_bar.max_value, scroll_bar.value + step)
+		return true
+	return false
+
+
+func _handle_chat_panel_wheel(event: InputEventMouseButton) -> bool:
+	if event == null or not event.pressed:
+		return false
+	if event.button_index != MOUSE_BUTTON_WHEEL_UP and event.button_index != MOUSE_BUTTON_WHEEL_DOWN:
+		return false
+	if not _is_chat_panel_point(event.position):
+		return false
+	return _scroll_chat_output_with_wheel(event.button_index)
+
+
 func _process(delta: float) -> void:
 	if _reveal < 1.0:
 		_reveal = min(1.0, _reveal + delta * REVEAL_SPEED)
@@ -607,6 +640,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton:
+		if _handle_chat_panel_wheel(event):
+			get_viewport().set_input_as_handled()
+			return
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			_is_orbiting = event.pressed
 			if event.pressed:

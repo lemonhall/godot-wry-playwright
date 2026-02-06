@@ -1,5 +1,9 @@
 # godot-wry-playwright
 
+## Screenshot
+
+![Agent Playwright Screenshot](./screenshot.png)
+
 Godot 4.6 + Rust GDExtension plugin that embeds a WebView via `wry`, and exposes a **Playwright-like (subset) automation API** to GDScript.
 
 This project’s goal is to let an agent (GDScript + LLM tooling) *browse* real web pages inside a Godot app: load external URLs, query DOM via selectors, click/fill, and run JavaScript — while keeping the API shape close to Playwright semantics.

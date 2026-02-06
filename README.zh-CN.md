@@ -1,5 +1,9 @@
 # godot-wry-playwright
 
+## 截图
+
+![Agent Playwright 截图](./screenshot.png)
+
 面向 Godot 4.6 的 Rust GDExtension 插件：基于 `wry` 嵌入 WebView，并向 GDScript 暴露一个**语义上接近 Playwright（子集）**的自动化接口。
 
 本项目的目标是让你的 GDScript Agent（未来可与 LLM Tool/Skill 组合）在 Godot 应用内“浏览网页”：加载外部 URL、用选择器定位 DOM、点击/输入、执行 JavaScript，并把结果以可等待的异步形式返回给 GDScript。
