@@ -42,6 +42,15 @@ def main() -> int:
     ok("three canonical demo scenes exist")
 
     obsolete_demo_entries = [
+        "demo.tscn",
+        "demo.gd",
+        "demo.gd.uid",
+        "ui_view_2d.tscn",
+        "ui_view_2d.gd",
+        "ui_view_2d.gd.uid",
+        "texture_3d.tscn",
+        "texture_3d.gd",
+        "texture_3d.gd.uid",
         "ui_view_3d.gd",
         "ui_view_3d.gd.uid",
         "ui_view_3d.tscn",

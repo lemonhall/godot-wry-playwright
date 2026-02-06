@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://d25h2kqnnxhj8"]
 
 [ext_resource type="Script" uid="uid://cyc6o3bjvopwg" path="res://demo/3d_demo.gd" id="1"]
-[ext_resource type="Shader" uid="uid://cruq0b3i7x4l1" path="res://demo/texture_reveal.gdshader" id="2"]
+[ext_resource type="Shader" uid="uid://cruq0b3i7x4l1" path="res://demo/3d_demo.gdshader" id="2"]
 [ext_resource type="PackedScene" uid="uid://c7vg2pepto3ia" path="res://assets/models/computer/Computer.glb" id="3"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
