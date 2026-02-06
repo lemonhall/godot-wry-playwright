@@ -170,3 +170,9 @@ Notes:
 - WSL2 -> Windows DLL build: `scripts/build_windows_wsl.sh`
 - Windows local copy step: `scripts/copy_bins.ps1`
 - CI builds Windows artifact: `.github/workflows/build-windows.yml`
+
+## 5) Current planning baseline
+
+- v3 status: `docs/plan/v3-index.md` (M3.3 remains planning/todo).
+- v4 status: `docs/plan/v4-index.md` (single public addon surface unification).
+- v4 PRD: `docs/prd/2026-02-06-addon-surface-unification.md`.

@@ -71,7 +71,9 @@ This loads external URLs and injects automation scripts into page contexts. Trea
 ## Docs (Tashan loop)
 
 - PRD/spec: `docs/prd/2026-02-05-godot-wry-playwright.md`
+- PRD/spec (v4 single-surface unification): `docs/prd/2026-02-06-addon-surface-unification.md`
 - v1 plan index: `docs/plan/v1-index.md`
+- v4 plan index (single public surface + demo migration): `docs/plan/v4-index.md`
 
 ## Windows MVP build (local)
 

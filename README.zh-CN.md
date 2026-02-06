@@ -71,7 +71,9 @@ MVP 目标接口：
 ## 文档（塔山循环）
 
 - PRD/Spec：`docs/prd/2026-02-05-godot-wry-playwright.md`
+- PRD/Spec（v4 单一入口统一）：`docs/prd/2026-02-06-addon-surface-unification.md`
 - v1 计划入口：`docs/plan/v1-index.md`
+- v4 计划入口（单一公开接口 + demo 迁移）：`docs/plan/v4-index.md`
 
 ## Windows MVP 构建（本机）
 
