@@ -19,6 +19,7 @@
 - 一个可复用、可导入的 Godot 插件（`addons/...`）+ 小而清晰的 GDScript API
 - 进程内运行的 `wry` WebView
 - 通过 **JS 注入 + IPC** 实现的 DOM 自动化
+- 场景脚本统一单一公开入口：`WryPwSession`
 -（Windows MVP）提供一个**可视 WebView overlay**：原生子窗口 WebView，可由 Godot UI 控制位置与尺寸
 -（Windows only，计划中）提供一个**3D“模拟渲染”模式**：周期性捕获 WebView 画面并作为纹理贴到 3D 场景（非实时 GPU 嵌入）
 
@@ -103,6 +104,41 @@ MVP 目标接口：
 当前默认主场景是 `res://demo/agent_playwright.tscn`。
 
 提示：2D 可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
+
+## v4 迁移说明（单一公开入口）
+
+- 场景脚本公开 API 统一为 `WryPwSession`。
+- `WryView` 已 deprecated，仅作过渡保留。
+- demo 中不应再直接 `new WryBrowser` / `new WryTextureBrowser`。
+
+最小迁移模板：
+
+```gdscript
+var session := WryPwSession.new()
+session.auto_start = false
+add_child(session)
+session.completed.connect(_on_completed)
+session.open("https://example.com", {"timeout_ms": 10_000})
+```
+
+2D 原生 view 模式：
+
+```gdscript
+session.open(url, {
+  "timeout_ms": 10_000,
+  "view_rect": {"x": 20, "y": 20, "width": 960, "height": 640},
+})
+```
+
+3D texture 模式：
+
+```gdscript
+session.frame_png.connect(_on_frame_png)
+session.open(url, {
+  "timeout_ms": 10_000,
+  "texture": {"width": 1024, "height": 768, "fps": 3},
+})
+```
 
 ## Win11 快速启动（proxy + agent 场景）
 

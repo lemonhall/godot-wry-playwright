@@ -4,6 +4,10 @@ param(
   [switch]$SkipRust,
   [switch]$SkipGodotRuntime,
   [switch]$SkipV3RuntimeCoverageCheck,
+  [switch]$SkipV4SingleSurfaceCheck,
+  [switch]$SkipV4LegacySurfaceCheck,
+  [switch]$SkipV4RuntimeCoverageCheck,
+  [switch]$SkipV4DemoMigrationRuntime,
   [switch]$EmitCoverageReport,
   [string]$CoverageReportMd = "docs/plan/v3-runtime-coverage-matrix.md",
   [string]$CoverageReportJson = "docs/plan/v3-runtime-coverage-matrix.json",
@@ -108,6 +112,12 @@ try {
     Invoke-Step -Name "Godot runtime tests (Agent Playwright)" -Action {
       powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "agent_playwright"
     }
+
+    if (-not $SkipV4DemoMigrationRuntime) {
+      Invoke-Step -Name "Godot runtime tests (v4 demo migration)" -Action {
+        powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "demo_migration_v4"
+      }
+    }
   }
 
   if (-not $SkipV3RuntimeCoverageCheck) {
@@ -163,6 +173,24 @@ try {
   if (-not $SkipV3M32CaptureStorageTabsCheck) {
     Invoke-Step -Name "v3 M3.2 capture/storage/tabs contract" -Action {
       Invoke-Python @("scripts/check_v3_capture_storage_tabs_contract.py")
+    }
+  }
+
+  if (-not $SkipV4SingleSurfaceCheck) {
+    Invoke-Step -Name "v4 single surface usage gate" -Action {
+      Invoke-Python @("scripts/check_v4_single_surface_usage.py")
+    }
+  }
+
+  if (-not $SkipV4LegacySurfaceCheck) {
+    Invoke-Step -Name "v4 legacy surface reference gate" -Action {
+      Invoke-Python @("scripts/check_v4_legacy_surface_refs.py")
+    }
+  }
+
+  if (-not $SkipV4RuntimeCoverageCheck) {
+    Invoke-Step -Name "v4 runtime coverage gate" -Action {
+      Invoke-Python @("scripts/check_v4_runtime_coverage.py")
     }
   }
 

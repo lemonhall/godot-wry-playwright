@@ -19,6 +19,7 @@ Languages: `README.zh-CN.md`
 - A reusable, importable Godot plugin (`addons/...`) with a small GDScript-facing API.
 - A `wry`-powered WebView running in-process.
 - DOM automation implemented by **JS injection + IPC**.
+- Single public addon surface for scene scripts: `WryPwSession`.
 - (Windows MVP) A **visible WebView overlay** mode: a native child-window WebView that can be positioned/sized from Godot UI.
 - (Windows-only, planned) A **3D “simulated render”** mode: periodically capture the WebView to an image and use it as a texture in 3D (not real-time GPU embedding).
 
@@ -103,6 +104,41 @@ From repo root (PowerShell):
 Current default main scene is `res://demo/agent_playwright.tscn`.
 
 Note: the 2D visible mode is a **native child-window overlay**, not a texture rendered by Godot.
+
+## v4 Migration Note (single public surface)
+
+- Public scene-side API is now `WryPwSession`.
+- `WryView` is deprecated and kept only for transition.
+- Legacy direct constructors (`WryBrowser.new()`, `WryTextureBrowser.new()`) should not be used in demos.
+
+Minimal migration pattern:
+
+```gdscript
+var session := WryPwSession.new()
+session.auto_start = false
+add_child(session)
+session.completed.connect(_on_completed)
+session.open("https://example.com", {"timeout_ms": 10_000})
+```
+
+For 2D native view mode:
+
+```gdscript
+session.open(url, {
+  "timeout_ms": 10_000,
+  "view_rect": {"x": 20, "y": 20, "width": 960, "height": 640},
+})
+```
+
+For 3D texture mode:
+
+```gdscript
+session.frame_png.connect(_on_frame_png)
+session.open(url, {
+  "timeout_ms": 10_000,
+  "texture": {"width": 1024, "height": 768, "fps": 3},
+})
+```
 
 ## Win11 quick start (proxy + agent scene)
 

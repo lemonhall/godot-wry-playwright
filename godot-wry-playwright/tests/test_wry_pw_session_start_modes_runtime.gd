@@ -29,5 +29,37 @@ func _init() -> void:
 	if not T.require_ok_response(self, close_resp, "close session"):
 		return
 
-	T.pass_and_quit(self)
+	var base_url := String(OS.get_environment("GODOT_TEST_HTTP_BASE_URL"))
+	if not T.require_true(self, base_url != "", "GODOT_TEST_HTTP_BASE_URL is required"):
+		return
 
+	var open_texture_id = session.open("%s/tests/fixtures/session_test_page.html" % base_url, {
+		"timeout_ms": 10_000,
+		"texture": {
+			"width": 640,
+			"height": 360,
+			"fps": 2,
+		},
+	})
+	var open_texture_resp = await T.wait_for_completed(self, pending, open_texture_id)
+	if not T.require_ok_response(self, open_texture_resp, "open texture mode"):
+		return
+
+	var eval_texture_id = session.eval("() => document.title")
+	var eval_texture_resp = await T.wait_for_completed(self, pending, eval_texture_id)
+	if not T.require_ok_response(self, eval_texture_resp, "eval in texture mode"):
+		return
+	if not T.require_eq(self, T.parse_json_or_null(String(eval_texture_resp.result_json)), "GWry Session Fixture", "texture mode title mismatch"):
+		return
+
+	var resize_texture_id = session.resize(600, 300)
+	var resize_texture_resp = await T.wait_for_completed(self, pending, resize_texture_id)
+	if not T.require_error_response(self, resize_texture_resp, "resize in texture mode", "resize_requires_view_mode"):
+		return
+
+	var close_texture_id = session.close()
+	var close_texture_resp = await T.wait_for_completed(self, pending, close_texture_id)
+	if not T.require_ok_response(self, close_texture_resp, "close texture mode"):
+		return
+
+	T.pass_and_quit(self)

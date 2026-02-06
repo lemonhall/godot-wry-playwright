@@ -3,7 +3,7 @@ extends Node3D
 @onready var screen: MeshInstance3D = %WebScreen
 @onready var camera_3d: Camera3D = %Camera3D
 
-var _browser: WryTextureBrowser
+var _session: WryPwSession
 var _tex: ImageTexture
 var _reveal: float = 1.0
 var _frame_count: int = 0
@@ -39,21 +39,27 @@ func _ready() -> void:
 
 	_update_camera_transform()
 
-	_browser = WryTextureBrowser.new()
-	add_child(_browser)
+	_session = WryPwSession.new()
+	_session.auto_start = false
+	add_child(_session)
 
-	_browser.completed.connect(func(id: int, completed_ok: bool, result_json: String, error: String) -> void:
+	_session.completed.connect(func(id: int, completed_ok: bool, result_json: String, error: String) -> void:
 		print("completed id=", id, " ok=", completed_ok, " result_json=", result_json, " error=", error)
 		if id > 0 and completed_ok:
 			_begin_navigation_cycle()
 	)
-	_browser.frame_png.connect(_on_frame_png)
-
-	var started := _browser.start_texture(CAPTURE_W, CAPTURE_H, CAPTURE_FPS)
-	print("browser.start_texture => ", started)
+	_session.frame_png.connect(_on_frame_png)
 
 	_begin_navigation_cycle()
-	_browser.goto(TARGET_URL, 10_000)
+	var open_id := _session.open(TARGET_URL, {
+		"timeout_ms": 10_000,
+		"texture": {
+			"width": CAPTURE_W,
+			"height": CAPTURE_H,
+			"fps": CAPTURE_FPS,
+		},
+	})
+	print("session.open(texture) id => ", open_id)
 
 
 func _process(delta: float) -> void:
@@ -142,11 +148,18 @@ func _begin_navigation_cycle() -> void:
 
 
 func _reload_page() -> void:
-	if _browser == null:
+	if _session == null:
 		return
 	print("reload_page key=5")
 	_begin_navigation_cycle()
-	_browser.goto(TARGET_URL, 10_000)
+	_session.open(TARGET_URL, {
+		"timeout_ms": 10_000,
+		"texture": {
+			"width": CAPTURE_W,
+			"height": CAPTURE_H,
+			"fps": CAPTURE_FPS,
+		},
+	})
 
 
 func _set_reveal(v: float) -> void:

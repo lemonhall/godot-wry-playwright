@@ -8,23 +8,38 @@ signal completed(request_id: int, ok: bool, result_json: String, error: String)
 const _M31_LEGACY_ERROR_MARKERS := ["snapshot_filename_empty"]
 
 var _browser: WryBrowser
+var _texture_browser: WryTextureBrowser
 var _started: bool = false
 var _view_mode: bool = false
+var _texture_mode: bool = false
 var _view_x: int = 0
 var _view_y: int = 0
 var _view_w: int = 1280
 var _view_h: int = 720
+var _texture_w: int = 1024
+var _texture_h: int = 768
+var _texture_fps: int = 3
 var _snapshot_save_map: Dictionary = {}
 var _tab_urls: Array[String] = [""]
 var _active_tab_index: int = 0
 var _pending_tab_nav: Dictionary = {}
+var _open_retry_state: Dictionary = {}
 var _next_local_request_id: int = -1
+var _texture_last_error: String = ""
+
+signal frame_png(png_bytes: PackedByteArray)
 
 
 func _ready() -> void:
 	_browser = WryBrowser.new()
 	add_child(_browser)
 	_browser.completed.connect(_on_browser_completed)
+	_texture_browser = WryTextureBrowser.new()
+	add_child(_texture_browser)
+	_texture_browser.completed.connect(_on_texture_browser_completed)
+	_texture_browser.frame_png.connect(func(png_bytes: PackedByteArray) -> void:
+		frame_png.emit(png_bytes)
+	)
 	set_process(true)
 
 	if auto_start:
@@ -36,7 +51,25 @@ func _process(_delta: float) -> void:
 		_browser.pump()
 
 
+func _on_texture_browser_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:
+	if _maybe_handle_open_retry(request_id, ok, result_json, error):
+		return
+
+	if request_id < 0 and not ok and error.strip_edges() != "":
+		_texture_last_error = error
+	completed.emit(request_id, ok, result_json, error)
+
+
 func _on_browser_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:
+	if _maybe_handle_open_retry(request_id, ok, result_json, error):
+		return
+
+	if request_id < 0 and not ok and _view_mode and _is_view_start_error(error):
+		_started = false
+		_view_mode = false
+		_pending_tab_nav.clear()
+		_open_retry_state.clear()
+
 	if _pending_tab_nav.has(request_id):
 		var tab_index := int(_pending_tab_nav.get(request_id, _active_tab_index))
 		_pending_tab_nav.erase(request_id)
@@ -65,7 +98,50 @@ func _on_browser_completed(request_id: int, ok: bool, result_json: String, error
 	completed.emit(request_id, ok, result_json, error)
 
 
+func _maybe_handle_open_retry(request_id: int, ok: bool, result_json: String, error: String) -> bool:
+	if not _open_retry_state.has(request_id):
+		return false
+
+	var state: Dictionary = _open_retry_state[request_id]
+	var origin_id := int(state.get("origin_id", request_id))
+	var tab_index := int(state.get("tab_index", _active_tab_index))
+	var timeout_ms := int(state.get("timeout_ms", 10_000))
+	var attempt := int(state.get("attempt", 0))
+	var max_attempts := int(state.get("max_attempts", 3))
+	var url := String(state.get("url", ""))
+
+	if not ok and String(error).contains("webview_not_started") and attempt < max_attempts and url != "":
+		_pending_tab_nav.erase(request_id)
+		var retry_id := _active_backend_goto(url, timeout_ms)
+		if retry_id > 0:
+			_pending_tab_nav[retry_id] = tab_index
+			state["attempt"] = attempt + 1
+			_open_retry_state.erase(request_id)
+			_open_retry_state[retry_id] = state
+			return true
+
+	_open_retry_state.erase(request_id)
+
+	if origin_id != request_id:
+		_pending_tab_nav.erase(request_id)
+		if ok:
+			_update_tab_url_for_index_from_result(tab_index, result_json)
+		completed.emit(origin_id, ok, result_json, error)
+		return true
+
+	return false
+
+
+func _is_view_start_error(error_text: String) -> bool:
+	var raw := String(error_text).strip_edges()
+	if raw == "":
+		return false
+	return raw.contains("missing parent_hwnd") or raw.contains("missing_parent_hwnd") or raw.contains("start_view_error")
+
+
 func _exit_tree() -> void:
+	if is_instance_valid(_texture_browser):
+		_texture_browser.stop()
 	if is_instance_valid(_browser):
 		_browser.stop()
 
@@ -90,6 +166,10 @@ func _ensure_started_with_options(options: Dictionary = {}) -> bool:
 	if _started:
 		return true
 
+	var texture_data := options.get("texture", null)
+	if texture_data is Dictionary:
+		return _start_texture_mode(texture_data as Dictionary)
+
 	var rect_data := options.get("view_rect", null)
 	if rect_data is Dictionary:
 		var view_rect: Dictionary = rect_data
@@ -109,11 +189,51 @@ func _ensure_started_with_options(options: Dictionary = {}) -> bool:
 
 	_started = _browser.start()
 	_view_mode = false
+	_texture_mode = false
 	return _started
 
 
 func _ensure_started() -> bool:
 	return _ensure_started_with_options({})
+
+
+func _start_texture_mode(texture_options: Dictionary = {}) -> bool:
+	var width := int(texture_options.get("width", _texture_w))
+	var height := int(texture_options.get("height", _texture_h))
+	var fps := int(texture_options.get("fps", _texture_fps))
+
+	width = max(1, width)
+	height = max(1, height)
+	fps = max(1, fps)
+
+	_texture_last_error = ""
+	var started_ok := _texture_browser.start_texture(width, height, fps)
+	if not started_ok:
+		return false
+
+	_texture_w = width
+	_texture_h = height
+	_texture_fps = fps
+	_started = true
+	_view_mode = false
+	_texture_mode = true
+	return true
+
+
+func _using_texture_mode() -> bool:
+	return _started and _texture_mode
+
+
+func _active_backend_goto(url: String, timeout_ms: int) -> int:
+	if _using_texture_mode():
+		return _texture_browser.goto(url, max(0, timeout_ms))
+	return _browser.goto(url, max(0, timeout_ms))
+
+
+func _active_backend_eval(script: String, timeout_ms: int) -> int:
+	if _using_texture_mode():
+		return _texture_browser.eval(script, max(0, timeout_ms))
+	return _browser.eval(script, max(0, timeout_ms))
 
 
 func _next_local_id() -> int:
@@ -261,7 +381,7 @@ func _navigate_active_tab(timeout_ms: int) -> int:
 	if not _ensure_started():
 		return _local_error("start_error")
 
-	var request_id := _browser.goto(url, max(0, _timeout_value(timeout_ms)))
+	var request_id := _active_backend_goto(url, _timeout_value(timeout_ms))
 	if request_id > 0:
 		_pending_tab_nav[request_id] = _active_tab_index
 	return request_id
@@ -471,7 +591,7 @@ func _button_index(button_name: String) -> int:
 func _run_eval(script: String, timeout_ms: int = -1) -> int:
 	if not _ensure_started():
 		return _local_error("start_error")
-	return _browser.eval(script, max(0, _timeout_value(timeout_ms)))
+	return _active_backend_eval(script, _timeout_value(timeout_ms))
 
 
 func _eval_with_payload(js_body: String, payload: Dictionary, timeout_ms: int = -1) -> int:
@@ -483,19 +603,34 @@ func _eval_with_payload(js_body: String, payload: Dictionary, timeout_ms: int = 
 func open(url: String, options: Dictionary = {}) -> int:
 	var timeout_ms := int(options.get("timeout_ms", 10_000))
 	if not _ensure_started_with_options(options):
+		if _texture_last_error != "":
+			return _local_error(_texture_last_error)
 		return _local_error("start_error")
 
 	_set_tab_url_for_active(url)
-	var request_id := _browser.goto(url, max(0, timeout_ms))
+	var request_id := _active_backend_goto(url, timeout_ms)
 	if request_id > 0:
-		_pending_tab_nav[request_id] = _active_tab_index
+		var tab_index := _active_tab_index
+		_pending_tab_nav[request_id] = tab_index
+		_open_retry_state[request_id] = {
+			"origin_id": request_id,
+			"tab_index": tab_index,
+			"url": url,
+			"timeout_ms": max(0, timeout_ms),
+			"attempt": 0,
+			"max_attempts": 3,
+		}
 	return request_id
 
 
 func close() -> int:
 	_started = false
 	_view_mode = false
+	_texture_mode = false
 	_pending_tab_nav.clear()
+	_open_retry_state.clear()
+	if is_instance_valid(_texture_browser):
+		_texture_browser.stop()
 	if is_instance_valid(_browser):
 		_browser.stop()
 	return _local_success(true)

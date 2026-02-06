@@ -3,6 +3,8 @@ class_name WryView
 
 signal completed(request_id: int, ok: bool, result_json: String, error: String)
 
+const _DEPRECATED_MESSAGE := "WryView is deprecated in v4. Please migrate to WryPwSession."
+
 @export var auto_start: bool = true
 @export var initial_url: String = ""
 @export var initial_timeout_ms: int = 10_000
@@ -12,6 +14,9 @@ var _started: bool = false
 
 
 func _ready() -> void:
+	push_warning(_DEPRECATED_MESSAGE)
+	print("DEPRECATED: ", _DEPRECATED_MESSAGE)
+
 	_browser = WryBrowser.new()
 	add_child(_browser)
 	_browser.completed.connect(func(id: int, ok: bool, result_json: String, error: String) -> void:

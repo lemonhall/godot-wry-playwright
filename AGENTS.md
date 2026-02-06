@@ -92,8 +92,13 @@ Agent path (agent_playwright scene)
 
 - Do not modify legacy demos when building agent UX
   - Why: `3d_demo` is baseline render/behavior reference.
-  - Do instead: add/iterate in `agent_playwright.*` to keep old demos stable.
+  - Do instead: add/iterate in `agent_playwright.*` to keep old demos stable, and keep canonical demos (`headeless/2d/3d`) on `WryPwSession` single surface.
   - Verify: `scripts/check_texture3d_scene_requirements.py` and `-Suite wry_pw_session` stay green.
+
+- Treat `WryView` as deprecated legacy surface
+  - Why: v4 strategy is single public addon API (`WryPwSession`) to reduce split semantics.
+  - Do instead: migrate scene scripts to `WryPwSession` + `open(options)` (`view_rect`/`texture`).
+  - Verify: `python3 scripts/check_v4_legacy_surface_refs.py` and `python3 scripts/check_v4_single_surface_usage.py`.
 
 ## 3) Testing Strategy
 
@@ -152,6 +157,10 @@ Notes:
 
 - Treat `TEST_FAIL` marker or non-zero exit as failure; ignore known Godot noisy shutdown diagnostics.
 - Runtime tests are authoritative for behavior. Static checks alone are not sufficient for completion claims.
+- v4 single-surface gates:
+  - `python3 scripts/check_v4_single_surface_usage.py`
+  - `python3 scripts/check_v4_legacy_surface_refs.py`
+  - `python3 scripts/check_v4_runtime_coverage.py`
 
 ### Proxy + agent scene manual verification (Win11)
 
