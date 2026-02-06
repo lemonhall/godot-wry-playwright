@@ -9,6 +9,7 @@
 ## 状态
 
 - 当前优先级：**Windows 桌面端 MVP**（通过 `wry` 使用 WebView2）
+- 已提供 Agent 集成场景：`res://demo/agent_playwright.tscn`（聊天 overlay + OpenAgentic tool-calling）
 - 计划：macOS/Linux，然后 Android；iOS 更后
 - 这不是 Playwright 的完整替代品（见“非目标”）
 
@@ -28,6 +29,7 @@
 ## 仓库结构
 
 - `godot-wry-playwright/`：用于开发/验证的最小 Godot 工程
+- `proxy/`：本地 Node.js 代理（给 OpenAgentic/agent 场景转发 `/v1/responses` SSE）
 - `wry/`：上游 `wry` 仓库（本地检出；除非明确要更新上游，否则视为只读）
 - `docs/prd/`：PRD/Spec（带 Req ID 的需求列表）
 - `docs/plan/`：版本化计划（`vN-*`），并与 PRD 可追溯
@@ -94,10 +96,55 @@ MVP 目标接口：
 - “类 headless”自动化：`res://demo/headeless_demo.tscn`
 - 可视 UI（2D）：`res://demo/2d_demo.tscn`（窗口左侧 2/3）
 - 贴图模式（3D 模拟渲染，Windows-only）：`res://demo/3d_demo.tscn`（电脑屏幕贴图）
+- Agent + 浏览器控制（聊天 overlay）：`res://demo/agent_playwright.tscn`
 
-官方 demo 集合固定为上述三种模式，不再提供重复场景。
+当前默认主场景是 `res://demo/agent_playwright.tscn`。
 
 提示：2D 可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
+
+## Win11 快速启动（proxy + agent 场景）
+
+### 1）启动 proxy（PowerShell 窗口 A）
+
+在仓库根目录：
+
+- `cd proxy`
+- `$env:OPENAI_API_KEY="<你的key>"`
+- `$env:OPENAI_BASE_URL="https://api.openai.com/v1"`
+- `node .\server.mjs`
+
+健康检查：
+
+- `irm http://127.0.0.1:8787/healthz`
+
+预期返回：`ok: true`。
+
+### 2）启动 Godot 场景（PowerShell 窗口 B）
+
+- `E:\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe --path E:\development\godot-wry-playwright\godot-wry-playwright`
+
+`agent_playwright` 默认配置：
+
+- proxy base URL：`http://127.0.0.1:8787/v1`
+- model：`gpt-4.1-mini`
+
+可在 `AgentPlaywright` 节点 Inspector 中覆盖：
+
+- `agent_proxy_base_url`
+- `agent_model`
+- `agent_auth_token`
+
+### 3）运行 runtime 测试套件
+
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite agent_playwright`
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite wry_pw_session`
+
+### 4）重要 API 约束
+
+OpenAI Responses 的工具名必须匹配 `^[a-zA-Z0-9_-]+$`。
+
+- 错误示例：`browser.open`
+- 正确示例：`browser_open`
 
 ## 运行模式（路线图）
 

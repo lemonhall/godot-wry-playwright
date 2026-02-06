@@ -1,0 +1,81 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://demo/agent_playwright.gd" id="1"]
+[ext_resource type="Shader" uid="uid://cruq0b3i7x4l1" path="res://demo/3d_demo.gdshader" id="2"]
+[ext_resource type="PackedScene" uid="uid://c7vg2pepto3ia" path="res://assets/models/computer/Computer.glb" id="3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+render_priority = 0
+shader = ExtResource("2")
+shader_parameter/reveal = 1.0
+
+[sub_resource type="QuadMesh" id="QuadMesh_1"]
+size = Vector2(2.75, 1.72)
+
+[node name="AgentPlaywright" type="Node3D" unique_id=96635393]
+script = ExtResource("1")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=676579079]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 5.4)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1809134566]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0, 3, 2.5)
+light_energy = 1.2
+
+[node name="ComputerRoot" type="Node3D" parent="." unique_id=1785209387]
+
+[node name="ComputerModel" parent="ComputerRoot" unique_id=995141359 instance=ExtResource("3")]
+transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0)
+
+[node name="WebScreen" type="MeshInstance3D" parent="ComputerRoot" unique_id=1114221005]
+unique_name_in_owner = true
+transform = Transform3D(1.3382504, 0, 0, 0, 1.1964288, 0, 0, 0, 1, -0.014196932, 1.6774213, 0.045431316)
+material_override = SubResource("ShaderMaterial_1")
+mesh = SubResource("QuadMesh_1")
+
+[node name="ChatOverlay" type="CanvasLayer" parent="."]
+
+[node name="Panel" type="PanelContainer" parent="ChatOverlay"]
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 598.0
+offset_bottom = 390.0
+
+[node name="VBox" type="VBoxContainer" parent="ChatOverlay/Panel"]
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="ChatOverlay/Panel/VBox"]
+text = "Agent Playwright Console"
+
+[node name="ChatStatusLabel" type="Label" parent="ChatOverlay/Panel/VBox"]
+unique_name_in_owner = true
+text = "Status: initializing"
+
+[node name="ChatOutput" type="RichTextLabel" parent="ChatOverlay/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 230)
+size_flags_vertical = 3
+scroll_following = true
+selection_enabled = true
+
+[node name="InputRow" type="HBoxContainer" parent="ChatOverlay/Panel/VBox"]
+theme_override_constants/separation = 8
+
+[node name="ChatInput" type="LineEdit" parent="ChatOverlay/Panel/VBox/InputRow"]
+unique_name_in_owner = true
+size_flags_horizontal = 3
+placeholder_text = "Type instruction, e.g. open github.com then click Sign in"
+clear_button_enabled = true
+
+[node name="ChatSendButton" type="Button" parent="ChatOverlay/Panel/VBox/InputRow"]
+unique_name_in_owner = true
+text = "Send"
+
+[node name="ChatClearButton" type="Button" parent="ChatOverlay/Panel/VBox/InputRow"]
+unique_name_in_owner = true
+text = "Clear"
+
+[node name="HintLabel" type="Label" parent="ChatOverlay/Panel/VBox"]
+text = "RMB orbit, MMB pan, Wheel zoom, Key 5 reload current target URL"
+autowrap_mode = 3

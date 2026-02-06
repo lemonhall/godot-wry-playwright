@@ -9,6 +9,7 @@ Languages: `README.zh-CN.md`
 ## Status
 
 - Current focus: **Windows desktop MVP** (WebView2 via `wry`)
+- Agent integration scene available: `res://demo/agent_playwright.tscn` (chat overlay + OpenAgentic tool-calling)
 - Planned: macOS/Linux, then Android; iOS later
 - Not a full Playwright replacement (see Non-goals)
 
@@ -28,6 +29,7 @@ Languages: `README.zh-CN.md`
 ## Repository layout
 
 - `godot-wry-playwright/`: minimal Godot project used for development/testing.
+- `proxy/`: local Node.js proxy used by OpenAgentic/agent scenes (`/v1/responses` SSE forwarding).
 - `wry/`: upstream `wry` repository (vendored checkout; treat as read-only unless explicitly updating upstream).
 - `docs/prd/`: PRD/spec (requirements with Req IDs).
 - `docs/plan/`: versioned plans (`vN-*`) with traceability to the PRD.
@@ -94,10 +96,49 @@ From repo root (PowerShell):
 - Headless-ish automation: `res://demo/headeless_demo.tscn`
 - Visible UI (2D): `res://demo/2d_demo.tscn` (left 2/3 of window)
 - Texture (3D simulated render, Windows-only): `res://demo/3d_demo.tscn` (computer monitor screen)
+- Agent + browser control (chat overlay): `res://demo/agent_playwright.tscn`
 
-Canonical demo set is intentionally limited to the three modes above.
+Current default main scene is `res://demo/agent_playwright.tscn`.
 
 Note: the 2D visible mode is a **native child-window overlay**, not a texture rendered by Godot.
+
+## Win11 quick start (proxy + agent scene)
+
+### 1) Start proxy (PowerShell window A)
+
+From repo root:
+
+- `cd proxy`
+- `$env:OPENAI_API_KEY="<your_key>"`
+- `$env:OPENAI_BASE_URL="https://api.openai.com/v1"`
+- `node .\server.mjs`
+
+Health check:
+
+- `irm http://127.0.0.1:8787/healthz`
+
+Expected: `ok: true`.
+
+### 2) Start Godot scene (PowerShell window B)
+
+- `E:\Godot_v4.6-stable_win64.exe\Godot_v4.6-stable_win64_console.exe --path E:\development\godot-wry-playwright\godot-wry-playwright`
+
+By default, `agent_playwright` uses:
+
+- proxy base URL: `http://127.0.0.1:8787/v1`
+- model: `gpt-4.1-mini`
+
+You can override in Inspector on `AgentPlaywright` node (`agent_proxy_base_url`, `agent_model`, `agent_auth_token`).
+
+### 3) Run runtime suites
+
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite agent_playwright`
+- `powershell -ExecutionPolicy Bypass -File scripts/run_godot_tests.ps1 -Suite wry_pw_session`
+
+### 4) Common API constraint (important)
+
+OpenAI Responses tool names must match `^[a-zA-Z0-9_-]+$`.
+Do not use dots in tool names (e.g. `browser.open` is invalid; use `browser_open`).
 
 ## Modes (roadmap)
 

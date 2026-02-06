@@ -104,6 +104,10 @@ try {
     Invoke-Step -Name "Godot runtime tests (WryPwSession)" -Action {
       powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "wry_pw_session"
     }
+
+    Invoke-Step -Name "Godot runtime tests (Agent Playwright)" -Action {
+      powershell -ExecutionPolicy Bypass -File "scripts/run_godot_tests.ps1" -Suite "agent_playwright"
+    }
   }
 
   if (-not $SkipV3RuntimeCoverageCheck) {
@@ -174,7 +178,8 @@ try {
     $scenes = @(
       "res://demo/headeless_demo.tscn",
       "res://demo/2d_demo.tscn",
-      "res://demo/3d_demo.tscn"
+      "res://demo/3d_demo.tscn",
+      "res://demo/agent_playwright.tscn"
     )
 
     foreach ($scene in $scenes) {
