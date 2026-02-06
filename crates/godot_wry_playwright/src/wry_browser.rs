@@ -23,6 +23,7 @@ mod backend {
 
   use tao::event::{Event, StartCause};
   use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
+  use tao::platform::windows::EventLoopBuilderExtWindows;
   use tao::window::WindowBuilder;
   use wry::{http::Request, PageLoadEvent, WebView, WebViewBuilder};
 
@@ -53,7 +54,9 @@ mod backend {
     let (proxy_tx, proxy_rx) = mpsc::channel::<EventLoopProxy<UserEvent>>();
 
     let join = thread::spawn(move || {
-      let event_loop = EventLoopBuilder::<UserEvent>::with_user_event().build();
+      let event_loop = EventLoopBuilder::<UserEvent>::with_user_event()
+        .with_any_thread(true)
+        .build();
       let proxy = event_loop.create_proxy();
       let _ = proxy_tx.send(proxy.clone());
 
