@@ -1,0 +1,12 @@
+# Reference-only upstream checkout (do not commit)
+/wry/
+
+# Rust build artifacts
+**/target/
+
+# Godot editor/cache artifacts
+godot-wry-playwright/.godot/
+
+# Extension build outputs copied into the Godot project
+godot-wry-playwright/addons/**/bin/
+

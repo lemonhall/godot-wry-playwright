@@ -1,0 +1,20 @@
+[package]
+name = "godot_wry_playwright"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+godot_wry_playwright_core = { path = "../godot_wry_playwright_core" }
+serde_json = "1"
+thiserror = "2"
+
+# Godot 4 GDExtension bindings
+godot = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+wry = "0.54.1"
+tao = "0.34"
+

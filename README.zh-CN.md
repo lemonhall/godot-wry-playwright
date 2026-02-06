@@ -1,0 +1,92 @@
+# godot-wry-playwright
+
+面向 Godot 4.6 的 Rust GDExtension 插件：基于 `wry` 嵌入 WebView，并向 GDScript 暴露一个**语义上接近 Playwright（子集）**的自动化接口。
+
+本项目的目标是让你的 GDScript Agent（未来可与 LLM Tool/Skill 组合）在 Godot 应用内“浏览网页”：加载外部 URL、用选择器定位 DOM、点击/输入、执行 JavaScript，并把结果以可等待的异步形式返回给 GDScript。
+
+语言：`README.md`
+
+## 状态
+
+- 当前优先级：**Windows 桌面端 MVP**（通过 `wry` 使用 WebView2）
+- 计划：macOS/Linux，然后 Android；iOS 更后
+- 这不是 Playwright 的完整替代品（见“非目标”）
+
+## 这是什么 / 不是什么
+
+**这是什么：**
+- 一个可复用、可导入的 Godot 插件（`addons/...`）+ 小而清晰的 GDScript API
+- 进程内运行的 `wry` WebView
+- 通过 **JS 注入 + IPC** 实现的 DOM 自动化
+
+**这不是什么：**
+- 具备 Playwright 全量能力的浏览器自动化框架（网络拦截、HAR、tracing、稳定 Locator 等不在 MVP 范围）
+- 可跨平台保证“严格 headless”的方案。桌面端可以创建隐藏窗口；移动端 WebView 通常必须挂在真实 view/window 上。
+
+## 仓库结构
+
+- `godot-wry-playwright/`：用于开发/验证的最小 Godot 工程
+- `wry/`：上游 `wry` 仓库（本地检出；除非明确要更新上游，否则视为只读）
+- `docs/prd/`：PRD/Spec（带 Req ID 的需求列表）
+- `docs/plan/`：版本化计划（`vN-*`），并与 PRD 可追溯
+
+## 架构（高层）
+
+### 核心链路
+
+1. GDScript 调用一个 Playwright 风格方法（例如 `goto` / `click` / `fill` / `wait_for_selector` / `eval`）。
+2. Rust 扩展通过注入 JavaScript 把命令送入 WebView（`wry::WebView::evaluate_script`）。
+3. 页面内 JS 执行操作，并用 IPC 把结果回传：
+   - JS → `window.ipc.postMessage(JSON.stringify({ id, ok, result, error }))`
+   - Rust → `ipc_handler` 收到消息后发 Godot signal / 完成一次 await
+
+### 为什么统一用 IPC 回传结果
+
+`wry::WebView::evaluate_script_with_callback` 在文档中标注 **Android 未实现**。为了跨平台一致性，结果回传统一走 IPC。
+
+### “类 Playwright”语义（子集）
+
+MVP 目标接口：
+- `goto(url)`
+- `eval(js)`
+- `click(selector)`
+- `fill(selector, text)`
+- `text(selector)` / `attr(selector, name)`
+- `wait_for_selector(selector, timeout_ms)`
+- `wait_for_load_state(state, timeout_ms)`（基础版）
+
+所有调用都以异步形式提供：带 `request_id`、超时、可追踪错误。
+
+## 安全提示
+
+该组件会加载外部 URL，并注入自动化脚本。默认把页面内容视为不可信：
+- 建议使用 allowlist 控制可导航域名/协议
+- 不把敏感信息注入页面 JS 环境
+- 条件允许时优先对受控页面做自动化
+
+## 文档（塔山循环）
+
+- PRD/Spec：`docs/prd/2026-02-05-godot-wry-playwright.md`
+- v1 计划入口：`docs/plan/v1-index.md`
+
+## Windows MVP 构建（本机）
+
+### 方案 A（推荐）：在 WSL2 编译，然后用 Windows Godot 运行验收
+
+在仓库根目录（WSL2 bash）：
+
+- `bash scripts/build_windows_wsl.sh`
+
+然后在 Windows 上用 Godot 4.6 打开 `godot-wry-playwright/` 运行 demo。
+
+### 方案 B：在 Windows 本机编译
+
+在仓库根目录（Windows PowerShell）：
+
+- 编译扩展：`cargo build -p godot_wry_playwright --release`
+- 拷贝 DLL 到 Godot 工程：`powershell -ExecutionPolicy Bypass -File scripts/copy_bins.ps1 -Profile release`
+- 用 Godot 4.6 打开 `godot-wry-playwright/` 并运行 demo（已设为主场景）。
+
+## 许可证
+
+待定（提示：上游 `wry` 为 MIT/Apache-2.0 双许可证；本仓库会单独明确自身许可证）。

@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/godot_wry_playwright_core",
+  "crates/godot_wry_playwright",
+]
+
