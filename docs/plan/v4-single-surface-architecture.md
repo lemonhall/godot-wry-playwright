@@ -2,7 +2,7 @@
 
 ## Goal
 
-把 addon 的公开能力收敛到一个类：`WryPwSession`，并把 legacy 入口降为内部实现细节或弃用对象。
+将 addon 的公开能力收敛到单一类：`WryPwSession`，并把 legacy 入口从 scene-facing 代码中移除。
 
 ## PRD Trace
 
@@ -13,30 +13,31 @@
 
 ## Scope
 
-- 明确公开 API：业务脚本、demo、测试只允许 `WryPwSession`。
-- 为 `WryPwSession` 增加统一启动配置（headless/view/texture），屏蔽底层类差异。
-- `WryBrowser`、`WryTextureBrowser`、`WryView` 不再作为推荐入口出现在 demo。
+- 明确公开 API：业务脚本、demo、tests 只允许 `WryPwSession`。
+- 在 `WryPwSession` 中统一启动配置（headless/view/texture），屏蔽底层差异。
+- `WryBrowser` / `WryTextureBrowser` 仅作为 session 内部实现细节。
 
 ## Acceptance
 
-- A1: 在 `godot-wry-playwright/demo/` 与 `godot-wry-playwright/tests/` 中，无 `WryBrowser.new()` / `WryTextureBrowser.new()` / `WryView` 直接依赖。
-- A2: `WryPwSession` 提供可用于三模式的统一配置入口，并有最小运行时证据。
-- A3: `AGENTS.md` 与 README 只把 `WryPwSession` 作为公开入口描述。
+- A1: 在 `godot-wry-playwright/demo/` 与 `godot-wry-playwright/tests/` 中无 `WryBrowser.new()` / `WryTextureBrowser.new()` / `WryView` 直接依赖。
+- A2: `agent_playwright.gd` 仅保留 `WryPwSession` 单一路径（无 texture/session 双驱动分支）。
+- A3: README/AGENTS 对外入口描述统一为 `WryPwSession`。
 
 ## Verification
 
 - `python scripts/check_v4_single_surface_usage.py`
+- `python scripts/check_v4_legacy_surface_refs.py`
 - `python3 C:\Users\lemon\.codex\skills\tashan-development-loop\scripts\doc_hygiene_check.py --root . --strict`
 
 ## Steps
 
-1) Red: 写 usage gate，先让现状 fail（识别 legacy 直接依赖）。
-2) Green: 在 `WryPwSession` 添加统一模式配置入口。
-3) Green: demo 改为只使用 `WryPwSession`。
-4) Refactor: 清理重复脚本逻辑，保留最小桥接层。
+1) Red: 先让 usage gate 检出 legacy 直连依赖。
+2) Green: 将 demo 场景改为只使用 `WryPwSession`。
+3) Green: 将 `agent_playwright` 从双驱动收敛为单驱动。
+4) Refactor: 清理遗留 helper 与重复路径，保持最小入口。
 
 ## Risks
 
-- `WryPwSession` 当前主要是自动化语义，补齐 3D texture 控制时可能引入过宽职责。
-- 2D `Control` 生命周期与 session 节点生命周期耦合点需明确。
+- `WryPwSession` 承担更多语义后，内部复杂度会增加。
+- 2D/3D 模式启动参数若不统一，容易产生“同 API 不同行为”。
 

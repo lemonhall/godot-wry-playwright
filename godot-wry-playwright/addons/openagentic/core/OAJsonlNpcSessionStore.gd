@@ -99,3 +99,9 @@ func read_events(npc_id: String) -> Array:
 			out.append(obj)
 	f.close()
 	return out
+
+
+func clear_session(npc_id: String) -> void:
+	_ensure_session(npc_id)
+	_write_text(_OAPaths.npc_events_path(_save_id, npc_id), "")
+	_store_next_seq(npc_id, 1)

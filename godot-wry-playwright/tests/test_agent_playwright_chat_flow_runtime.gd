@@ -9,6 +9,7 @@ class MockOpenAgentic:
 	var save_id: String = ""
 	var system_prompt: String = ""
 	var _tool_calls: Array[Dictionary] = []
+	var cleared_npc_id: String = ""
 
 	func set_save_id(id: String) -> void:
 		save_id = id
@@ -37,6 +38,10 @@ class MockOpenAgentic:
 		on_event.call({"type": "assistant.message", "text": text})
 		on_event.call({"type": "result", "final_text": text, "stop_reason": "end"})
 
+	func clear_npc_conversation(npc_id: String) -> Dictionary:
+		cleared_npc_id = npc_id
+		return {"ok": true, "npc_id": npc_id}
+
 
 func _init() -> void:
 	await process_frame
@@ -63,8 +68,9 @@ func _init() -> void:
 	var output := scene.get_node_or_null("ChatOverlay/Panel/VBox/ChatOutput") as RichTextLabel
 	var status := scene.get_node_or_null("ChatOverlay/Panel/VBox/ChatStatusLabel") as Label
 	var send := scene.get_node_or_null("ChatOverlay/Panel/VBox/InputRow/ChatSendButton") as Button
+	var clear := scene.get_node_or_null("ChatOverlay/Panel/VBox/InputRow/ChatClearButton") as Button
 
-	if not T.require_true(self, input != null and output != null and status != null and send != null, "chat nodes should exist"):
+	if not T.require_true(self, input != null and output != null and status != null and send != null and clear != null, "chat nodes should exist"):
 		return
 
 	input.text = "open page and check title"
@@ -94,6 +100,13 @@ func _init() -> void:
 	if not T.require_true(self, not send.disabled, "send button should be enabled after turn"):
 		return
 	if not T.require_true(self, input.editable, "input should be editable after turn"):
+		return
+
+	clear.emit_signal("pressed")
+	await process_frame
+	if not T.require_true(self, String(mock.cleared_npc_id) == String(scene.get("agent_npc_id")), "clear should reset npc conversation"):
+		return
+	if not T.require_true(self, String(status.text).contains("cleared"), "status should indicate session clear"):
 		return
 
 	get_root().remove_child(scene)

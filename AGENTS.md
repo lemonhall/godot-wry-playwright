@@ -29,7 +29,7 @@ This repo builds a **Godot 4.6 GDExtension plugin** (Rust) that embeds a WebView
 ### Data Flow
 
 ```
-GDScript (WryBrowser/WryPwSession/agent_playwright)
+GDScript (WryPwSession/agent_playwright)
   -> Rust GDExtension (assign request_id, send command)
     -> wry WebView evaluate_script("window.__gwry.dispatch(...)")
       -> JS shim executes (querySelector/click/fill/wait)
@@ -41,7 +41,7 @@ Agent path (agent_playwright scene)
   -> OpenAgentic.run_npc_turn(...)
     -> proxy /v1/responses (SSE)
       -> tool.use/tool.result
-        -> browser_* tools -> WryTextureBrowser (texture) / WryPwSession (session)
+        -> browser_* tools -> WryPwSession (single surface)
           -> overlay chat transcript
 ```
 
@@ -95,9 +95,9 @@ Agent path (agent_playwright scene)
   - Do instead: add/iterate in `agent_playwright.*` to keep old demos stable, and keep canonical demos (`headeless/2d/3d`) on `WryPwSession` single surface.
   - Verify: `scripts/check_texture3d_scene_requirements.py` and `-Suite wry_pw_session` stay green.
 
-- Treat `WryView` as deprecated legacy surface
+- Treat `WryView` as removed legacy surface
   - Why: v4 strategy is single public addon API (`WryPwSession`) to reduce split semantics.
-  - Do instead: migrate scene scripts to `WryPwSession` + `open(options)` (`view_rect`/`texture`).
+  - Do instead: use only `WryPwSession` + `open(options)` (`view_rect`/`texture`) in scene scripts.
   - Verify: `python3 scripts/check_v4_legacy_surface_refs.py` and `python3 scripts/check_v4_single_surface_usage.py`.
 
 ## 3) Testing Strategy

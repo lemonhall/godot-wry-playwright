@@ -38,6 +38,14 @@ await OpenAgentic.run_npc_turn("npc_blacksmith_001", "Hello", func(ev: Dictionar
 )
 ```
 
+4. Clear one NPC conversation (reset `events.jsonl` + sequence):
+
+```gdscript
+var rd := OpenAgentic.clear_npc_conversation("npc_blacksmith_001")
+if not bool(rd.get("ok", false)):
+	push_error("clear failed: %s" % String(rd.get("error", "unknown_error")))
+```
+
 ## Hooks
 
 You can attach hooks to rewrite/block tool calls (or trigger gameplay like animations/VFX):

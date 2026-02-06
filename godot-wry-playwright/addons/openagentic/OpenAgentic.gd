@@ -113,3 +113,25 @@ func run_npc_turn(npc_id: String, user_text: String, on_event: Callable) -> void
 	var rt = _AgentRuntimeScript.new(store, runner, tools, provider, model, hooks)
 	rt.set_system_prompt(system_prompt)
 	await rt.run_turn(npc_id, user_text, on_event, save_id)
+
+
+func clear_npc_conversation(npc_id: String) -> Dictionary:
+	if save_id.strip_edges() == "":
+		return {"ok": false, "error": "missing_save_id"}
+
+	var npc := String(npc_id).strip_edges()
+	if npc == "":
+		return {"ok": false, "error": "missing_npc_id"}
+
+	var store = _SessionStoreScript.new(save_id)
+	store.clear_session(npc)
+
+	if permission_gate != null and permission_gate.has_method("reset_session"):
+		permission_gate.call("reset_session", npc)
+
+	return {
+		"ok": true,
+		"save_id": save_id,
+		"npc_id": npc,
+		"events_path": _OAPaths.npc_events_path(save_id, npc),
+	}

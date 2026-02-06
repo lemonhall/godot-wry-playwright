@@ -19,7 +19,6 @@ const OA_TOOL_SCRIPT := preload("res://addons/openagentic/core/OATool.gd")
 @export var target_url: String = "https://www.baidu.com/"
 @export var auto_navigate_on_ready: bool = true
 @export var browser_enabled: bool = true
-@export_enum("texture", "session") var tool_driver_mode: String = "texture"
 
 @export_group("Agent")
 @export var agent_enabled: bool = true
@@ -33,7 +32,8 @@ const OA_TOOL_SCRIPT := preload("res://addons/openagentic/core/OATool.gd")
 @export var agent_auto_allow_tools: bool = true
 @export_multiline var agent_system_prompt: String = "You control the in-scene browser. Prefer browser_open, browser_click, browser_fill, browser_title, browser_eval. Keep replies concise and action-oriented."
 
-var _browser: WryTextureBrowser
+var _tool_session: WryPwSession = null
+var _tool_session_pending: Dictionary = {}
 var _tex: ImageTexture
 var _reveal: float = 1.0
 var _frame_count: int = 0
@@ -44,11 +44,6 @@ var _orbit_yaw: float = 0.0
 var _orbit_pitch: float = deg_to_rad(-12.0)
 var _camera_distance: float = 5.4
 var _camera_target: Vector3 = Vector3(0.0, 1.45, 0.35)
-
-var _browser_results: Dictionary = {}
-var _browser_backend_error: String = ""
-var _tool_session: WryPwSession = null
-var _tool_session_pending: Dictionary = {}
 
 var _openagentic: Node = null
 var _agent_ready: bool = false
@@ -71,9 +66,8 @@ const TOOL_TIMEOUT_MAX_MS := 45_000
 func _ready() -> void:
 	_setup_input_actions()
 	_update_camera_transform()
-	if _use_session_tool_driver():
-		_setup_tool_session_driver()
-	if browser_enabled and not _use_session_tool_driver():
+	_setup_tool_session_driver()
+	if browser_enabled:
 		_setup_browser()
 	_setup_chat_ui()
 	if agent_enabled:
@@ -92,55 +86,22 @@ func _setup_input_actions() -> void:
 
 
 func _setup_browser() -> void:
-	_attach_browser_node()
-	var started := _browser.start_texture(capture_width, capture_height, capture_fps)
-	print("browser.start_texture => ", started)
-
+	if _tool_session == null:
+		return
 	_begin_navigation_cycle()
 	if auto_navigate_on_ready:
-		_browser.goto(target_url, 10_000)
+		_tool_session.open(target_url, _session_open_options(10_000))
 
 
-func _attach_browser_node() -> void:
-	_browser = WryTextureBrowser.new()
-	add_child(_browser)
-	_browser.completed.connect(_on_browser_completed)
-	_browser.frame_png.connect(_on_frame_png)
-
-
-func _restart_browser_backend() -> bool:
-	_browser_results.clear()
-	_browser_backend_error = ""
-	_frozen_after_first_frame = false
-	_frame_count = 0
-	_reveal = 1.0
-	_set_reveal(_reveal)
-
-	if _browser != null:
-		_browser.stop()
-		remove_child(_browser)
-		_browser.free()
-		_browser = null
-
-	_attach_browser_node()
-	var started := _browser.start_texture(capture_width, capture_height, capture_fps)
-	print("browser.restart_texture => ", started)
-	return started
-
-
-func _should_restart_for_error(error_text: String) -> bool:
-	var raw := error_text.strip_edges()
-	if raw == "":
-		return false
-	return (
-		raw.contains("webview2_controller_error")
-		or raw.contains("missing parent_hwnd")
-		or raw.contains("missing_parent_hwnd")
-	)
-
-
-func _use_session_tool_driver() -> bool:
-	return String(tool_driver_mode).strip_edges().to_lower() == "session"
+func _session_open_options(timeout_ms: int) -> Dictionary:
+	return {
+		"timeout_ms": timeout_ms,
+		"texture": {
+			"width": capture_width,
+			"height": capture_height,
+			"fps": capture_fps,
+		},
+	}
 
 
 func _setup_tool_session_driver() -> void:
@@ -150,6 +111,7 @@ func _setup_tool_session_driver() -> void:
 	_tool_session.auto_start = false
 	add_child(_tool_session)
 	_tool_session.completed.connect(_on_tool_session_completed)
+	_tool_session.frame_png.connect(_on_frame_png)
 
 
 func _on_tool_session_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:
@@ -177,14 +139,26 @@ func _await_tool_session_request(request_id: int, timeout_ms: int) -> Dictionary
 
 func _setup_chat_ui() -> void:
 	chat_send_button.pressed.connect(_on_chat_send_pressed)
-	chat_clear_button.pressed.connect(func() -> void:
-		chat_output.clear()
-		_set_status("Chat cleared.", false)
-	)
+	chat_clear_button.pressed.connect(_on_chat_clear_pressed)
 	chat_input.text_submitted.connect(_on_chat_text_submitted)
 	chat_output.bbcode_enabled = false
 	_set_agent_busy(false)
 	_set_status("Initializing agent...", false)
+
+
+func _on_chat_clear_pressed() -> void:
+	chat_output.clear()
+	if _openagentic != null and _openagentic.has_method("clear_npc_conversation"):
+		var result: Variant = _openagentic.call("clear_npc_conversation", agent_npc_id)
+		if typeof(result) == TYPE_DICTIONARY and bool((result as Dictionary).get("ok", false)):
+			_set_status("Chat and agent session cleared.", false)
+			return
+		var err := "unknown_error"
+		if typeof(result) == TYPE_DICTIONARY:
+			err = String((result as Dictionary).get("error", err))
+		_set_status("Chat cleared, session clear failed: %s" % err, true)
+		return
+	_set_status("Chat cleared. Agent session clear API unavailable.", true)
 
 
 func _setup_agent() -> void:
@@ -476,54 +450,18 @@ func _tool_timeout(input: Dictionary, fallback_ms: int = TOOL_TIMEOUT_DEFAULT_MS
 
 
 func _tool_browser_open(input: Dictionary, _ctx: Dictionary) -> Variant:
-	if _use_session_tool_driver():
-		if _tool_session == null:
-			return {"ok": false, "error": "tool_session_not_ready"}
-		var url_session := String(input.get("url", "")).strip_edges()
-		if url_session == "":
-			return {"ok": false, "error": "missing_url"}
-		var timeout_session := _tool_timeout(input, TOOL_TIMEOUT_DEFAULT_MS)
-		var request_id_session := _tool_session.open(url_session, {"timeout_ms": timeout_session})
-		var response_session: Dictionary = await _await_tool_session_request(request_id_session, timeout_session + 2_000)
-		if not bool(response_session.get("ok", false)):
-			return {
-				"ok": false,
-				"request_id": request_id_session,
-				"error": String(response_session.get("error", "open_failed")),
-			}
-		return {
-			"ok": true,
-			"request_id": request_id_session,
-			"url": url_session,
-			"result": _parse_json_value(String(response_session.get("result_json", "null")), false),
-		}
-
-	if _browser == null:
-		return {"ok": false, "error": "browser_not_ready"}
+	if _tool_session == null:
+		return {"ok": false, "error": "tool_session_not_ready"}
 
 	var url := String(input.get("url", "")).strip_edges()
 	if url == "":
 		return {"ok": false, "error": "missing_url"}
 
 	var timeout_ms := _tool_timeout(input, TOOL_TIMEOUT_DEFAULT_MS)
-	var last_response: Dictionary = {}
-	for attempt in range(2):
-		_begin_navigation_cycle()
-		var request_id := _browser.goto(url, timeout_ms)
-		var response: Dictionary = await _await_browser_request(request_id, timeout_ms + 2_000)
-		last_response = response
-		if bool(response.get("ok", false)):
-			return {
-				"ok": true,
-				"request_id": request_id,
-				"url": url,
-				"result": _parse_json_value(String(response.get("result_json", "null")), false),
-			}
-
-		if attempt == 0 and _should_restart_for_error(String(response.get("error", ""))):
-			if _restart_browser_backend():
-				continue
-
+	_begin_navigation_cycle()
+	var request_id := _tool_session.open(url, _session_open_options(timeout_ms))
+	var response: Dictionary = await _await_tool_session_request(request_id, timeout_ms + 2_000)
+	if not bool(response.get("ok", false)):
 		return {
 			"ok": false,
 			"request_id": request_id,
@@ -531,8 +469,10 @@ func _tool_browser_open(input: Dictionary, _ctx: Dictionary) -> Variant:
 		}
 
 	return {
-		"ok": false,
-		"error": String(last_response.get("error", "open_failed")),
+		"ok": true,
+		"request_id": request_id,
+		"url": url,
+		"result": _parse_json_value(String(response.get("result_json", "null")), false),
 	}
 
 
@@ -619,45 +559,12 @@ func _tool_browser_title(input: Dictionary, _ctx: Dictionary) -> Variant:
 
 
 func _execute_browser_eval(script: String, timeout_ms: int) -> Dictionary:
-	if _use_session_tool_driver():
-		if _tool_session == null:
-			return {"ok": false, "error": "tool_session_not_ready"}
+	if _tool_session == null:
+		return {"ok": false, "error": "tool_session_not_ready"}
 
-		var request_id_session := _tool_session.eval(script, "", timeout_ms)
-		var response_session: Dictionary = await _await_tool_session_request(request_id_session, timeout_ms + 1_500)
-		if not bool(response_session.get("ok", false)):
-			return {
-				"ok": false,
-				"request_id": request_id_session,
-				"error": String(response_session.get("error", "eval_failed")),
-			}
-
-		return {
-			"ok": true,
-			"request_id": request_id_session,
-			"value": _parse_json_value(String(response_session.get("result_json", "null")), false),
-		}
-
-	if _browser == null:
-		return {"ok": false, "error": "browser_not_ready"}
-
-	var last_response: Dictionary = {}
-	for attempt in range(2):
-		_begin_navigation_cycle()
-		var request_id := _browser.eval(script, timeout_ms)
-		var response: Dictionary = await _await_browser_request(request_id, timeout_ms + 1_500)
-		last_response = response
-		if bool(response.get("ok", false)):
-			return {
-				"ok": true,
-				"request_id": request_id,
-				"value": _parse_json_value(String(response.get("result_json", "null")), false),
-			}
-
-		if attempt == 0 and _should_restart_for_error(String(response.get("error", ""))):
-			if _restart_browser_backend():
-				continue
-
+	var request_id := _tool_session.eval(script, "", timeout_ms)
+	var response: Dictionary = await _await_tool_session_request(request_id, timeout_ms + 1_500)
+	if not bool(response.get("ok", false)):
 		return {
 			"ok": false,
 			"request_id": request_id,
@@ -665,33 +572,9 @@ func _execute_browser_eval(script: String, timeout_ms: int) -> Dictionary:
 		}
 
 	return {
-		"ok": false,
-		"error": String(last_response.get("error", "eval_failed")),
-	}
-
-
-func _await_browser_request(request_id: int, timeout_ms: int) -> Dictionary:
-	var deadline: int = Time.get_ticks_msec() + int(max(200, timeout_ms))
-	while Time.get_ticks_msec() <= deadline:
-		if _browser_backend_error != "":
-			var backend_error := _browser_backend_error
-			_browser_backend_error = ""
-			return {
-				"ok": false,
-				"result_json": "null",
-				"error": backend_error,
-			}
-
-		if _browser_results.has(request_id):
-			var response: Dictionary = _browser_results[request_id]
-			_browser_results.erase(request_id)
-			return response
-		await get_tree().process_frame
-
-	return {
-		"ok": false,
-		"result_json": "null",
-		"error": "timeout_wait_browser_completed:%d" % request_id,
+		"ok": true,
+		"request_id": request_id,
+		"value": _parse_json_value(String(response.get("result_json", "null")), false),
 	}
 
 
@@ -751,19 +634,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_update_camera_transform()
 
 
-func _on_browser_completed(request_id: int, ok: bool, result_json: String, error: String) -> void:
-	if request_id < 0 and not ok and error.strip_edges() != "":
-		_browser_backend_error = error
-	_browser_results[request_id] = {
-		"ok": ok,
-		"result_json": result_json,
-		"error": error,
-	}
-	print("completed id=", request_id, " ok=", ok, " result_json=", result_json, " error=", error)
-	if request_id > 0 and ok:
-		_begin_navigation_cycle()
-
-
 func _on_frame_png(png_bytes: PackedByteArray) -> void:
 	if _frozen_after_first_frame:
 		return
@@ -805,11 +675,11 @@ func _begin_navigation_cycle() -> void:
 
 
 func _reload_page() -> void:
-	if _browser == null:
+	if _tool_session == null:
 		return
 	print("reload_page key=5")
 	_begin_navigation_cycle()
-	_browser.goto(target_url, 10_000)
+	_tool_session.open(target_url, _session_open_options(10_000))
 
 
 func _set_reveal(v: float) -> void:

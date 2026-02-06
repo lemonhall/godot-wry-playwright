@@ -8,6 +8,7 @@ TARGET_FILES = [
     Path("godot-wry-playwright/demo/headeless_demo.gd"),
     Path("godot-wry-playwright/demo/2d_demo.gd"),
     Path("godot-wry-playwright/demo/3d_demo.gd"),
+    Path("godot-wry-playwright/demo/agent_playwright.gd"),
     Path("godot-wry-playwright/demo/2d_demo.tscn"),
 ]
 
@@ -50,4 +51,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

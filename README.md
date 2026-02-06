@@ -108,7 +108,7 @@ Note: the 2D visible mode is a **native child-window overlay**, not a texture re
 ## v4 Migration Note (single public surface)
 
 - Public scene-side API is now `WryPwSession`.
-- `WryView` is deprecated and kept only for transition.
+- Legacy `WryView` has been removed from addon surface.
 - Legacy direct constructors (`WryBrowser.new()`, `WryTextureBrowser.new()`) should not be used in demos.
 
 Minimal migration pattern:

@@ -17,7 +17,6 @@ func _init() -> void:
 	var scene := (packed as PackedScene).instantiate()
 	scene.set("agent_enabled", false)
 	scene.set("auto_navigate_on_ready", false)
-	scene.set("tool_driver_mode", "session")
 	get_root().add_child(scene)
 	await process_frame
 

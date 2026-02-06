@@ -108,7 +108,7 @@ MVP 目标接口：
 ## v4 迁移说明（单一公开入口）
 
 - 场景脚本公开 API 统一为 `WryPwSession`。
-- `WryView` 已 deprecated，仅作过渡保留。
+- legacy `WryView` 已从 addon 对外面删除。
 - demo 中不应再直接 `new WryBrowser` / `new WryTextureBrowser`。
 
 最小迁移模板：
