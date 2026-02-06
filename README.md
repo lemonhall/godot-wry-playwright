@@ -91,12 +91,13 @@ From repo root (PowerShell):
 
 ## Demos
 
-- Headless-ish automation: `res://demo/demo.tscn`
-- Visible UI (2D): `res://demo/ui_view_2d.tscn` (left 2/3 of window)
-- Visible UI (3D): `res://demo/ui_view_3d.tscn` (overlay via `CanvasLayer`)
-- Texture (3D simulated render, Windows-only): `res://demo/texture_3d.tscn`
+- Headless-ish automation: `res://demo/headeless_demo.tscn`
+- Visible UI (2D): `res://demo/2d_demo.tscn` (left 2/3 of window)
+- Texture (3D simulated render, Windows-only): `res://demo/3d_demo.tscn` (computer monitor screen)
 
-Note: the visible mode is a **native child-window overlay**, not a texture rendered by Godot.
+Canonical demo set is intentionally limited to the three modes above.
+
+Note: the 2D visible mode is a **native child-window overlay**, not a texture rendered by Godot.
 
 ## Modes (roadmap)
 

@@ -91,12 +91,13 @@ MVP 目标接口：
 
 ## Demos
 
-- “类 headless”自动化：`res://demo/demo.tscn`
-- 可视 UI（2D）：`res://demo/ui_view_2d.tscn`（窗口左侧 2/3）
-- 可视 UI（3D）：`res://demo/ui_view_3d.tscn`（通过 `CanvasLayer` 叠加）
-- 贴图模式（3D 模拟渲染，Windows-only）：`res://demo/texture_3d.tscn`
+- “类 headless”自动化：`res://demo/headeless_demo.tscn`
+- 可视 UI（2D）：`res://demo/2d_demo.tscn`（窗口左侧 2/3）
+- 贴图模式（3D 模拟渲染，Windows-only）：`res://demo/3d_demo.tscn`（电脑屏幕贴图）
 
-提示：可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
+官方 demo 集合固定为上述三种模式，不再提供重复场景。
+
+提示：2D 可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
 
 ## 运行模式（路线图）
 

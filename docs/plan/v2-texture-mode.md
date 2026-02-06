@@ -32,7 +32,7 @@ Follow-up slice for scene integration and controls is tracked in:
 
 ## Acceptance (binary)
 
-- A1: In `res://demo/texture_3d.tscn`, the computer monitor overlay surface shows the `https://example.com` page.
+- A1: In `res://demo/3d_demo.tscn`, the computer monitor overlay surface shows the `https://www.baidu.com/` page.
 - A2: The demo visually shows a “top-to-bottom reveal” effect when updating frames.
 - A3: The plugin API keeps modes isolated: texture mode is a separate class/API surface (no breaking changes to `WryBrowser` / `WryView`).
 
@@ -52,7 +52,7 @@ Follow-up acceptance for model placement, camera controls, and key reload is def
 ### Godot (Windows)
 
 - Open `godot-wry-playwright/` in Godot 4.6
-- Run `res://demo/texture_3d.tscn`
+- Run `res://demo/3d_demo.tscn`
 
 Expected:
 - the cube face updates with captured frames
@@ -62,8 +62,8 @@ Expected:
 
 - Create: `crates/godot_wry_playwright/src/wry_texture_browser.rs`
 - Modify: `crates/godot_wry_playwright/src/lib.rs`
-- Create: `godot-wry-playwright/demo/texture_3d.tscn`
-- Create: `godot-wry-playwright/demo/texture_3d.gd`
+- Create: `godot-wry-playwright/demo/3d_demo.tscn`
+- Create: `godot-wry-playwright/demo/3d_demo.gd`
 - Create: `godot-wry-playwright/demo/texture_reveal.gdshader`
 
 ## Steps (implementation outline)
@@ -71,6 +71,6 @@ Expected:
 1) Add a new GodotClass `WryTextureBrowser` (Windows-only backend) that emits `frame_png(png_bytes)` and `completed(...)` for commands.
 2) Implement periodic capture using WebView2 `CapturePreview` into an in-memory stream and forward PNG bytes to Godot.
 3) Add a 3D demo that:
-   - calls `goto("https://example.com")`
+   - calls `goto("https://www.baidu.com/")`
    - updates a cube material from PNG bytes
    - uses a shader param to reveal from top-to-bottom.

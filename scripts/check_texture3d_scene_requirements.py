@@ -7,10 +7,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-TS_CN = ROOT / "godot-wry-playwright/demo/texture_3d.tscn"
-TS_GD = ROOT / "godot-wry-playwright/demo/texture_3d.gd"
+TS_CN = ROOT / "godot-wry-playwright/demo/3d_demo.tscn"
+TS_GD = ROOT / "godot-wry-playwright/demo/3d_demo.gd"
 MODEL_GLB = ROOT / "godot-wry-playwright/assets/models/computer/Computer.glb"
 WTB_RS = ROOT / "crates/godot_wry_playwright/src/wry_texture_browser.rs"
+DEMO_DIR = ROOT / "godot-wry-playwright/demo"
 
 
 def fail(msg: str) -> None:
@@ -30,6 +31,33 @@ def expect(path: Path, pattern: str, what: str) -> None:
 
 
 def main() -> int:
+    canonical_demo_scenes = [
+        DEMO_DIR / "headeless_demo.tscn",
+        DEMO_DIR / "2d_demo.tscn",
+        DEMO_DIR / "3d_demo.tscn",
+    ]
+    for scene in canonical_demo_scenes:
+        if not scene.exists():
+            fail(f"canonical demo scene missing: {scene}")
+    ok("three canonical demo scenes exist")
+
+    obsolete_demo_entries = [
+        "ui_view_3d.gd",
+        "ui_view_3d.gd.uid",
+        "ui_view_3d.tscn",
+        "visible_2d.gd",
+        "visible_2d.gd.uid",
+        "visible_2d.tscn",
+        "visible_3d.gd",
+        "visible_3d.gd.uid",
+        "visible_3d.tscn",
+    ]
+    for name in obsolete_demo_entries:
+        p = DEMO_DIR / name
+        if p.exists():
+            fail(f"obsolete demo file still exists: {p}")
+    ok("obsolete demo files removed")
+
     if not MODEL_GLB.exists():
         fail(f"moved model missing: {MODEL_GLB}")
     ok("moved model exists")
@@ -49,7 +77,7 @@ def main() -> int:
     expect(WTB_RS, r"applyTextureFitWidth", "fit-width JS helper exists")
     expect(WTB_RS, r"overflowX\s*=\s*'hidden'", "fit-width script hides horizontal overflow")
 
-    print("PASS: texture_3d static requirements satisfied")
+    print("PASS: 3d_demo static requirements satisfied")
     return 0
 
 

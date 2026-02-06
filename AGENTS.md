@@ -7,11 +7,11 @@ This repo builds a **Godot 4.6 GDExtension plugin** (Rust) that embeds a WebView
 ### Areas
 
 - Godot project (demo + plugin host): `godot-wry-playwright/`
-  - main scene: `godot-wry-playwright/demo/ui_view_2d.tscn`
+  - main scene: `godot-wry-playwright/demo/3d_demo.tscn`
   - demos:
-    - headless-ish: `godot-wry-playwright/demo/demo.tscn`
-    - visible 2D: `godot-wry-playwright/demo/ui_view_2d.tscn`
-    - visible 3D: `godot-wry-playwright/demo/ui_view_3d.tscn`
+    - headless-ish: `godot-wry-playwright/demo/headeless_demo.tscn`
+    - visible 2D: `godot-wry-playwright/demo/2d_demo.tscn`
+    - visible 3D texture: `godot-wry-playwright/demo/3d_demo.tscn`
   - extension registration: `godot-wry-playwright/project.godot` (`[gdextension]` section)
 - Plugin (Godot-side entry):
   - `.gdextension`: `godot-wry-playwright/addons/godot_wry_playwright/godot_wry_playwright.gdextension`
@@ -93,10 +93,51 @@ Manual acceptance is currently done by running the demo scene in Godot 4.6 on Wi
 
 - Build + copy DLL from WSL2 (cross-compile):  
   - `bash scripts/build_windows_wsl.sh`
-- Then open `godot-wry-playwright/` in Godot and run (main scene is `res://demo/ui_view_2d.tscn`).
+- Then open `godot-wry-playwright/` in Godot and run canonical demos:
+  - `res://demo/headeless_demo.tscn`
+  - `res://demo/2d_demo.tscn`
+  - `res://demo/3d_demo.tscn`
 
 Notes:
 - WSL2 cross-compile produces a **Windows-GNU** DLL. If Godot fails to load it due to missing runtime DLLs, prefer the **CI Windows artifact** (MSVC) from `.github/workflows/build-windows.yml`.
+
+### One-command checks (Windows PowerShell)
+
+From Windows PowerShell at repo root:
+
+- `scripts\run_tests.ps1` (doc + Rust + scene static checks)
+- `scripts\run_tests.ps1 -Quick` (skip the second Rust test group)
+- `scripts\run_tests.ps1 -RunGodotSmoke -GodotExe "E:\\Godot_v4.6-stable_win64.exe\\Godot_v4.6-stable_win64_console.exe"`
+
+### Running tests (WSL2 + Linux Godot) — recommended for script-only tests
+
+If WSL interop to a Windows `.exe` is flaky, use a Linux Godot binary as a deterministic test runner.
+
+Preferred binary check:
+
+- `export GODOT_LINUX_EXE=/home/lemonhall/godot46/Godot_v4.6-stable_linux.x86_64`
+- `"$GODOT_LINUX_EXE" --version`
+
+Required env isolation (prevents crashes when `user://` writes are blocked in real `$HOME`):
+
+- `export HOME=/tmp/oa-home`
+- `export XDG_DATA_HOME=/tmp/oa-xdg-data`
+- `export XDG_CONFIG_HOME=/tmp/oa-xdg-config`
+- `mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_CONFIG_HOME"`
+
+Run all Godot script tests (if present):
+
+- `if [ ! -d godot-wry-playwright/tests ]; then echo "No Godot tests under godot-wry-playwright/tests yet"; else (cd godot-wry-playwright && while IFS= read -r t; do echo "--- RUN $t"; timeout 120s "$GODOT_LINUX_EXE" --headless --rendering-driver dummy --path "$(pwd)" --script "res://$t"; done < <(find tests -type f -name 'test_*.gd' | LC_ALL=C sort)); fi`
+
+Run a single Godot script test:
+
+- `timeout 120s "$GODOT_LINUX_EXE" --headless --rendering-driver dummy --path "$(pwd)/godot-wry-playwright" --script res://tests/<your_test>.gd`
+
+Linux runtime caveat (important):
+
+- This repo currently ships Windows runtime binaries in `addons/.../bin/windows/`.
+- On Linux, demo scenes that require `WryBrowser` / `WryTextureBrowser` will fail to load unless a matching `linux.x86_64` extension binary is added.
+- Use Windows Godot runtime verification for extension behavior; use Linux Godot mainly for script-only tests/tools.
 
 ### Godot test suite conventions (add as we grow)
 

@@ -26,7 +26,7 @@ PRD Trace: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-01
 
 ## Acceptance (binary)
 
-- A1: In the demo project, calling `goto("https://example.com")` completes within 10s and `eval("() => document.title")` returns `"Example Domain"`.
+- A1: In the demo project, calling `goto("https://www.baidu.com/")` completes within 10s and `eval("() => document.title")` returns a non-empty title JSON string.
 - A2: `wait_for_selector("h1", 5000)` completes with ok.
 - A3: When a selector does not appear, `wait_for_selector(..., timeout)` returns an error and includes `request_id`.
 - A4: All results are delivered through IPC envelope JSON and can be parsed as UTF-8.
@@ -44,9 +44,8 @@ These are the intended verification commands (Windows):
   - `powershell -ExecutionPolicy Bypass -File scripts/copy_bins.ps1 -Profile release`
 - Run demo in Godot:
   - open `godot-wry-playwright/` in Godot 4.6 and run:
-    - headless-ish: `res://demo/demo.tscn`
-    - visible 2D: `res://demo/ui_view_2d.tscn`
-    - visible 3D: `res://demo/ui_view_3d.tscn`
+    - headless-ish: `res://demo/headeless_demo.tscn`
+    - visible 2D: `res://demo/2d_demo.tscn`
 - Doc gate (must stay green):
   - `python3 /home/lemonhall/.codex/skills/tashan-development-loop/scripts/doc_hygiene_check.py --root . --strict`
 
@@ -54,12 +53,10 @@ These are the intended verification commands (Windows):
 
 - `godot-wry-playwright/addons/godot_wry_playwright/godot_wry_playwright.gdextension`
 - `godot-wry-playwright/addons/godot_wry_playwright/bin/windows/godot_wry_playwright.dll` (copied artifact)
-- `godot-wry-playwright/demo/demo.gd`
-- `godot-wry-playwright/demo/demo.tscn`
-- `godot-wry-playwright/demo/ui_view_2d.gd`
-- `godot-wry-playwright/demo/ui_view_2d.tscn`
-- `godot-wry-playwright/demo/ui_view_3d.gd`
-- `godot-wry-playwright/demo/ui_view_3d.tscn`
+- `godot-wry-playwright/demo/headeless_demo.gd`
+- `godot-wry-playwright/demo/headeless_demo.tscn`
+- `godot-wry-playwright/demo/2d_demo.gd`
+- `godot-wry-playwright/demo/2d_demo.tscn`
 - `godot-wry-playwright/addons/godot_wry_playwright/wry_view.gd`
 - `crates/godot_wry_playwright/**` (Rust extension crate)
 - `crates/godot_wry_playwright_core/**` (protocol + JS shim)

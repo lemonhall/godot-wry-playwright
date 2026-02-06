@@ -60,7 +60,7 @@
 | Req ID | 需求描述 | 验收口径（可二元判定） | 验证方式（命令/测试/步骤） | 优先级 | 依赖/风险 |
 |---|---|---|---|---|---|
 | REQ-001 | 插件化交付：可直接复制 `addons/godot_wry_playwright/` 到任意 Godot 4.6 工程并启用 | 示例工程可加载插件且无启动报错 | Godot 打开工程并启用插件；运行 demo 场景 | P0 | GDExtension 打包与平台产物 |
-| REQ-002 | 提供 GDScript API（Playwright 子集）：`goto/eval/click/fill/text/attr/wait_for_selector/wait_for_load_state` | 每个 API 调用都能在超时内返回 ok/err | 自动化 demo：对 `https://example.com` 读取标题/文本 | P0 | JS shim 语义一致性 |
+| REQ-002 | 提供 GDScript API（Playwright 子集）：`goto/eval/click/fill/text/attr/wait_for_selector/wait_for_load_state` | 每个 API 调用都能在超时内返回 ok/err | 自动化 demo：对 `https://www.baidu.com/` 读取标题/文本 | P0 | JS shim 语义一致性 |
 | REQ-003 | Windows MVP：可创建 WebView2 并加载外部 URL | `goto(url)` 后 `url()` 返回目标 URL（或规范化后的等价 URL） | Windows 导出/运行验证 | P0 | WebView2 runtime |
 | REQ-004 | 异步命令协议：每条命令都有 Request ID、超时、可追踪错误 | 超时会以明确错误结束，不会悬挂 | 单元/集成测试（v1 计划定义） | P0 | 线程与事件循环 |
 | REQ-005 | JS Automation Shim：支持选择器定位、点击、输入、读取属性/文本、等待 DOM 条件 | `wait_for_selector` 在元素出现时返回；超时返回错误 | 集成测试（v1 计划定义） | P0 | WebView 内核差异 |
@@ -68,13 +68,13 @@
 | REQ-007 | 提供最小可观测性：关键事件日志（导航、命令开始/结束、超时、IPC 错误） | 出错时日志包含 request_id 与错误摘要 | 人工复现 + 日志检查 | P1 | 日志噪音控制 |
 | REQ-008 | Android：在导出 App 中可运行同一套 GDScript API（子集一致） | 同一 demo 在 Android 上可跑通 | Android instrumentation / 手动验证 | P2 | UI 线程、生命周期 |
 | REQ-009 | 安全边界：提供 allowlist/denylist 钩子控制导航（可选） | 禁止的 URL 不会被加载 | 集成测试（v2） | P2 | URL 规范化 |
-| REQ-010 | Windows 可视 UI：提供 `start_view/set_view_rect` + 一个可挂载的 `WryView(Control)`，在 2D/3D 场景中覆盖显示 WebView（占屏幕 2/3） | 运行 demo 时，WebView 可见且随 UI 尺寸变化更新 | Windows Godot 运行：`res://demo/ui_view_2d.tscn` 与 `res://demo/ui_view_3d.tscn` | P1 | DPI/坐标系、原生子窗口限制 |
-| REQ-011 | 3D“模拟渲染”模式：周期性捕获 WebView 帧（PNG/bitmap）并更新为 Godot 纹理，用于贴到 3D 模型表面（例如立方体某一面） | 运行 3D demo 时，网页画面能以固定 FPS 更新到模型材质上；并可模拟“从上到下逐步渲染”效果 | Windows Godot 运行：`res://demo/texture_3d.tscn`（v2） | P1 | 性能/延迟、交互坐标反算、WebView2 CapturePreview 依赖 |
-| REQ-012 | 3D Demo 资产归置：模型资产必须放到 `res://assets/models/...`，不允许把 `.glb` 直接放在项目根目录 | `res://Computer.glb` 不再被场景引用；`texture_3d.tscn` 从 `res://assets/models/computer/computer.glb` 加载模型 | `rg` 静态检查 + Godot 打开场景 | P1 | 资源迁移后 import 缓存更新 |
-| REQ-013 | 3D Demo 电脑屏幕贴图：网页纹理需贴到电脑模型屏幕区域，而非独立灰墙/测试方块 | 运行 `res://demo/texture_3d.tscn` 时，网页内容出现在电脑显示器正面区域 | Windows Godot 手动验收 | P1 | 模型坐标系/屏幕区域估算 |
+| REQ-010 | Windows 可视 UI：提供 `start_view/set_view_rect` + 一个可挂载的 `WryView(Control)`，在 2D 场景中覆盖显示 WebView（占屏幕 2/3） | 运行 demo 时，WebView 可见且随 UI 尺寸变化更新 | Windows Godot 运行：`res://demo/2d_demo.tscn` | P1 | DPI/坐标系、原生子窗口限制 |
+| REQ-011 | 3D“模拟渲染”模式：周期性捕获 WebView 帧（PNG/bitmap）并更新为 Godot 纹理，用于贴到 3D 模型表面（例如立方体某一面） | 运行 3D demo 时，网页画面能以固定 FPS 更新到模型材质上；并可模拟“从上到下逐步渲染”效果 | Windows Godot 运行：`res://demo/3d_demo.tscn`（v2） | P1 | 性能/延迟、交互坐标反算、WebView2 CapturePreview 依赖 |
+| REQ-012 | 3D Demo 资产归置：模型资产必须放到 `res://assets/models/...`，不允许把 `.glb` 直接放在项目根目录 | `res://Computer.glb` 不再被场景引用；`3d_demo.tscn` 从 `res://assets/models/computer/computer.glb` 加载模型 | `rg` 静态检查 + Godot 打开场景 | P1 | 资源迁移后 import 缓存更新 |
+| REQ-013 | 3D Demo 电脑屏幕贴图：网页纹理需贴到电脑模型屏幕区域，而非独立灰墙/测试方块 | 运行 `res://demo/3d_demo.tscn` 时，网页内容出现在电脑显示器正面区域 | Windows Godot 手动验收 | P1 | 模型坐标系/屏幕区域估算 |
 | REQ-014 | 3D Demo 相机交互：支持经典观察控制（滚轮缩放、右键旋转、中键平移） | 在场景运行中可稳定执行缩放/旋转/平移三类交互 | Windows Godot 手动验收 | P1 | 输入冲突、相机翻转边界 |
 | REQ-015 | 3D Demo 快捷键刷新：按数字键 `5`（非 `F5`）可触发网页 reload，并重新抓取一帧更新到屏幕 | 运行中按 `5` 后出现一次新的 `goto` 完成日志，屏幕纹理刷新且仍保持“每轮只展示首帧” | Windows Godot 手动验收 + 控制台日志 | P1 | 抓帧时机与导航状态同步 |
-| REQ-016 | 3D Texture 模式页面自动宽度适配：页面加载后自动按宽度缩放，默认不出现横向滚动条 | 运行 `res://demo/texture_3d.tscn` 时，`https://example.com` 在默认视角下横向无滚动，内容按宽度缩放 | Windows Godot 手动验收 + 控制台日志 | P1 | 页面 CSS/动态布局差异 |
+| REQ-016 | 3D Texture 模式页面自动宽度适配：页面加载后自动按宽度缩放，默认不出现横向滚动条 | 运行 `res://demo/3d_demo.tscn` 时，`https://www.baidu.com/` 在默认视角下横向无滚动，内容按宽度缩放 | Windows Godot 手动验收 + 控制台日志 | P1 | 页面 CSS/动态布局差异 |
 
 ## 7) 约束与不接受（Constraints）
 

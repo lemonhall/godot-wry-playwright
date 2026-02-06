@@ -12,7 +12,7 @@ func _ready() -> void:
 	var ok: bool = _browser.start()
 	print("browser.start() => ", ok)
 
-	_goto_id = _browser.goto("https://example.com", 10_000)
+	_goto_id = _browser.goto("https://www.baidu.com/", 10_000)
 	print("goto id => ", _goto_id)
 
 

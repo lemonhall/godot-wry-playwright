@@ -2,7 +2,7 @@
 
 ## Goal
 
-Upgrade `res://demo/texture_3d.tscn` from a synthetic box demo to a computer-model demo where the captured webpage is shown on the monitor area, camera controls are game-like, and key `5` triggers a reload-and-refresh cycle.
+Upgrade `res://demo/3d_demo.tscn` from a synthetic box demo to a computer-model demo where the captured webpage is shown on the monitor area, camera controls are game-like, and key `5` triggers a reload-and-refresh cycle.
 
 ## PRD Trace
 
@@ -13,9 +13,9 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 ### In scope
 
 - Move model assets from project root to `res://assets/models/computer/` and update scene references.
-- Integrate the computer model into `texture_3d.tscn` as the main visible object.
+- Integrate the computer model into `3d_demo.tscn` as the main visible object.
 - Attach webpage texture to a dedicated “screen overlay quad” placed at monitor front area.
-- Add camera controls in `texture_3d.gd`:
+- Add camera controls in `3d_demo.gd`:
   - wheel zoom
   - RMB orbit
   - MMB pan
@@ -31,9 +31,9 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 ## Acceptance (binary)
 
 - A1 (REQ-012): `res://Computer.glb` is no longer used by demo scene; scene uses `res://assets/models/computer/Computer.glb`.
-- A2 (REQ-013): in `res://demo/texture_3d.tscn`, webpage appears on monitor-facing overlay quad attached to computer model.
+- A2 (REQ-013): in `res://demo/3d_demo.tscn`, webpage appears on monitor-facing overlay quad attached to computer model.
 - A3 (REQ-014): running scene supports RMB orbit, MMB pan, mouse wheel zoom with no script errors.
-- A4 (REQ-015): pressing key `5` reloads current URL (`https://example.com`) and screen gets a newly refreshed frame.
+- A4 (REQ-015): pressing key `5` reloads current URL (`https://www.baidu.com/`) and screen gets a newly refreshed frame.
 - A5: per-load capture policy stays deterministic: exactly one displayed frame per navigation cycle unless user triggers reload key again.
 - A6 (REQ-016): page capture defaults to width-fit behavior and horizontal scrolling is disabled by injected script.
 
@@ -55,7 +55,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 ### Godot (Windows manual)
 
 - Open `godot-wry-playwright/`
-- Run `res://demo/texture_3d.tscn`
+- Run `res://demo/3d_demo.tscn`
 - Verify:
   - monitor shows webpage image (not side wall panel)
   - RMB rotates, MMB pans, wheel zooms
@@ -67,8 +67,8 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 - Move: `godot-wry-playwright/Computer.glb.import` → `godot-wry-playwright/assets/models/computer/Computer.glb.import`
 - Move: `godot-wry-playwright/Computer_Computer Texture.png` → `godot-wry-playwright/assets/models/computer/Computer_Computer Texture.png`
 - Move: `godot-wry-playwright/Computer_Computer Texture.png.import` → `godot-wry-playwright/assets/models/computer/Computer_Computer Texture.png.import`
-- Modify: `godot-wry-playwright/demo/texture_3d.tscn`
-- Modify: `godot-wry-playwright/demo/texture_3d.gd`
+- Modify: `godot-wry-playwright/demo/3d_demo.tscn`
+- Modify: `godot-wry-playwright/demo/3d_demo.gd`
 - Modify: `crates/godot_wry_playwright/src/wry_texture_browser.rs`
 - Modify: `docs/plan/v2-index.md`
 - Modify: `docs/plan/v2-texture-mode.md`
@@ -85,7 +85,7 @@ PRD Trace: REQ-012, REQ-013, REQ-014, REQ-015, REQ-016
 1) Red: add static checks ensuring scene references moved model path and reload action.
 2) Green: move model files and update scene references.
 3) Red: add static checks for camera-control variables and input handling branches.
-4) Green: implement orbit/pan/zoom controls in `texture_3d.gd`.
+4) Green: implement orbit/pan/zoom controls in `3d_demo.gd`.
 5) Red: add static check for key `5` reload branch and per-cycle frame-freeze reset.
 6) Green: implement reload logic and first-frame-per-load behavior.
 7) Refactor: clean constants/naming and keep behavior unchanged.
