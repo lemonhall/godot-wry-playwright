@@ -46,4 +46,59 @@ for dll in "${runtime_dlls[@]}"; do
   fi
 done
 
+# wry(WebView2) depends on WebView2Loader.dll at runtime.
+# We fetch it from the NuGet package if it's not already present.
+loader_dst="${dst_dir}/WebView2Loader.dll"
+if [[ ! -f "${loader_dst}" ]]; then
+  echo "Fetching WebView2Loader.dll from NuGet..."
+  export DST_DIR="${dst_dir}"
+  python3 - <<'PY'
+import json
+import os
+import sys
+import tempfile
+import urllib.request
+import zipfile
+
+dst_dir = os.environ.get("DST_DIR")
+if not dst_dir:
+  print("DST_DIR env missing", file=sys.stderr)
+  sys.exit(2)
+
+index_url = "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/index.json"
+with urllib.request.urlopen(index_url) as r:
+  data = json.load(r)
+
+versions = data.get("versions") or []
+if not versions:
+  print("No versions found for Microsoft.Web.WebView2", file=sys.stderr)
+  sys.exit(2)
+
+version = versions[-1]
+nupkg_url = f"https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/{version}/microsoft.web.webview2.{version}.nupkg"
+
+with tempfile.TemporaryDirectory() as td:
+  nupkg_path = os.path.join(td, "webview2.nupkg")
+  urllib.request.urlretrieve(nupkg_url, nupkg_path)
+
+  with zipfile.ZipFile(nupkg_path) as z:
+    # Prefer 64-bit native loader.
+    candidates = [
+      n for n in z.namelist()
+      if n.lower().endswith("webview2loader.dll")
+    ]
+    prefer = [n for n in candidates if "/x64/" in n.lower() or "\\x64\\" in n.lower()]
+    pick = (prefer or candidates)
+    if not pick:
+      print("WebView2Loader.dll not found in NuGet package", file=sys.stderr)
+      sys.exit(2)
+    name = pick[0]
+    out_path = os.path.join(dst_dir, "WebView2Loader.dll")
+    with z.open(name) as src, open(out_path, "wb") as dst:
+      dst.write(src.read())
+
+print("Fetched WebView2Loader.dll")
+PY
+fi
+
 echo "Copied: $dst"
