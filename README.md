@@ -17,6 +17,26 @@ Languages: `README.zh-CN.md`
 - Planned: macOS/Linux, then Android; iOS later
 - Not a full Playwright replacement (see Non-goals)
 
+## Imagination & Use Cases
+
+- Run real-agent deep research inside your game world: use GPT/Claude-like models to drive a real browser and gather external information.
+- Build NPCs that answer like frontier LLMs and fetch the latest web data in real time before responding.
+- Enable GTA-style in-world web experiences in 3D scenes, such as browsing and shopping on virtual websites.
+- Build in-game smartphones like GTA without heavy custom UI tech: use standard `HTML5 + CSS + JS` content pipelines.
+
+## What Makes This Different
+
+- 3D-ready browser render pipeline: supports texture-based in-scene web rendering flows.
+- Agent-native foundation: designed around AI-friendly primitives, tool calls, and async automation semantics.
+- Skill-ready roadmap: architecture is designed to evolve toward reusable SKILL-style capability packs.
+- Mobile-first future plan: Android and iOS are prioritized as major next platform targets.
+
+## Dependency Backbone
+
+- `wry` comes from the Tauri ecosystem (`tauri-apps/wry`), with strong performance characteristics and active long-term maintenance.
+- `openagentic-sdk-gdscript` is a real game-runtime agent SDK inspired by the well-known `opencode` (100k-level influence) architecture.
+- It is designed to support production-grade agent capabilities: full conversation/session management, SKILL support, ToolUse framework, prompt injection, Hooks pipeline, persisted sessions, and up-to-date OpenAI Responses API compatibility.
+
 ## What this is (and is not)
 
 **This is:**

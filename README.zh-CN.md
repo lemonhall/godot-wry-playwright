@@ -17,6 +17,26 @@
 - 计划：macOS/Linux，然后 Android；iOS 更后
 - 这不是 Playwright 的完整替代品（见“非目标”）
 
+## 用途与想象力
+
+- 在游戏世界里做真正的 Agent Deep Research：让 GPT/Claude 等模型驱动真实浏览器访问外部信息。
+- 让你的游戏 NPC 像前沿大模型一样聪明回答问题，并在回答前实时访问网页获取最新信息。
+- 在 3D 游戏中做 GTA 风格的虚拟上网体验，例如访问游戏内网站并完成购物流程。
+- 像 GTA 一样拥有游戏内 smartphone，而不需要复杂游戏 UI 技术栈，只用 `HTML5 + CSS + JS` 即可构建内容。
+
+## 与其他库的区别
+
+- 拥有 3D 渲染管线：支持将网页内容映射到 3D 场景中的贴图流程。
+- 天然支持 Agents：这是一个 AI Native 的库，提供 AI 友好的原语与异步工具调用语义。
+- 未来可 SKILL 化：架构为能力模块化与可复用技能包预留了演进空间。
+- 未来优先移动端：后续平台支持将优先推进 Android 和 iOS。
+
+## 依赖生态背书
+
+- `wry` 来自 Tauri 生态（`tauri-apps/wry`），性能表现与维护活跃度都很高。
+- `openagentic-sdk-gdscript` 是面向真实游戏运行时落地的 Agent SDK，灵感来自著名项目 `opencode`（10 万级影响力）。
+- 它面向完整 Agent 工程能力：完整对话/会话管理、SKILL 技能、ToolUse 框架、提示词注入、Hooks 机制、sessions 持久化，以及对最新 OpenAI Responses API 的完整支持。
+
 ## 这是什么 / 不是什么
 
 **这是什么：**
