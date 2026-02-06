@@ -1,0 +1,32 @@
+name: build-windows
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build (release)
+        run: cargo build -p godot_wry_playwright --release
+
+      - name: Copy DLL into Godot project
+        shell: pwsh
+        run: |
+          ./scripts/copy_bins.ps1 -Profile release
+
+      - name: Upload addon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot_wry_playwright-windows-x86_64
+          path: |
+            godot-wry-playwright/addons/godot_wry_playwright/bin/windows/
+            godot-wry-playwright/addons/godot_wry_playwright/godot_wry_playwright.gdextension
+
