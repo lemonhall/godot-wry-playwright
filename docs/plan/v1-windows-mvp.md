@@ -6,7 +6,7 @@ Deliver a Windows desktop MVP: a Godot 4.6 plugin that can create a `wry` WebVie
 
 ## PRD Trace
 
-PRD Trace: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007
+PRD Trace: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-010
 
 ## Scope
 
@@ -22,7 +22,7 @@ PRD Trace: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007
 
 - Android/iOS backends (REQ-008 deferred).
 - Network interception / tracing artifacts / HAR.
-- Visual embedding inside Godot’s rendering view.
+- Rendering the WebView into Godot’s rendering view (texture/material/mesh).
 
 ## Acceptance (binary)
 
@@ -30,6 +30,7 @@ PRD Trace: REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007
 - A2: `wait_for_selector("h1", 5000)` completes with ok.
 - A3: When a selector does not appear, `wait_for_selector(..., timeout)` returns an error and includes `request_id`.
 - A4: All results are delivered through IPC envelope JSON and can be parsed as UTF-8.
+- A5: Visible UI demo: WebView is visible as a native overlay and occupies the left 2/3 of the Godot window in both 2D and 3D demo scenes.
 
 ## Verification commands (planned)
 
@@ -42,7 +43,10 @@ These are the intended verification commands (Windows):
 - Copy the DLL into the Godot project:
   - `powershell -ExecutionPolicy Bypass -File scripts/copy_bins.ps1 -Profile release`
 - Run demo in Godot:
-  - open `godot-wry-playwright/` in Godot 4.6 and run the main scene (`res://demo/demo.tscn`) which exercises A1–A3
+  - open `godot-wry-playwright/` in Godot 4.6 and run:
+    - headless-ish: `res://demo/demo.tscn`
+    - visible 2D: `res://demo/ui_view_2d.tscn`
+    - visible 3D: `res://demo/ui_view_3d.tscn`
 - Doc gate (must stay green):
   - `python3 /home/lemonhall/.codex/skills/tashan-development-loop/scripts/doc_hygiene_check.py --root . --strict`
 
@@ -52,6 +56,11 @@ These are the intended verification commands (Windows):
 - `godot-wry-playwright/addons/godot_wry_playwright/bin/windows/godot_wry_playwright.dll` (copied artifact)
 - `godot-wry-playwright/demo/demo.gd`
 - `godot-wry-playwright/demo/demo.tscn`
+- `godot-wry-playwright/demo/ui_view_2d.gd`
+- `godot-wry-playwright/demo/ui_view_2d.tscn`
+- `godot-wry-playwright/demo/ui_view_3d.gd`
+- `godot-wry-playwright/demo/ui_view_3d.tscn`
+- `godot-wry-playwright/addons/godot_wry_playwright/wry_view.gd`
 - `crates/godot_wry_playwright/**` (Rust extension crate)
 - `crates/godot_wry_playwright_core/**` (protocol + JS shim)
 

@@ -5,8 +5,8 @@
 - Topic：godot-wry-playwright
 - Owner：TBD
 - Status：draft
-- Version：v0
-- Last updated：2026-02-05
+- Version：v1
+- Last updated：2026-02-06
 - Links：
   - 计划入口：`docs/plan/v1-index.md`
 
@@ -33,12 +33,13 @@
 - G2：对 GDScript 暴露一组语义接近 Playwright 的自动化 API（子集），用于网页浏览与交互。
 - G3：Windows 桌面端可加载外部 URL，并能通过选择器实现 click/fill/wait/eval 并获得稳定的异步返回。
 - G4：统一的跨平台结果回传协议（IPC JSON envelope），确保未来 Android/iOS 进入时不改变上层语义。
+- G5：Windows 桌面端提供一个“可视 WebView UI”演示：在 Godot 窗口中以原生子窗口覆盖的方式显示 WebView（用于调试/演示，不要求渲染到 Godot 纹理）。
 
 ## 3) 非目标（Non-goals）
 
 - NG1：实现 Playwright 的全量能力（网络拦截、HAR、tracing、稳定 Locator、跨浏览器引擎选择等）。
 - NG2：保证跨平台“严格 headless”。
-- NG3：在 MVP 阶段实现可视化嵌入到 Godot 渲染区域（先用隐藏/独立原生窗口作为承载）。
+- NG3：在 MVP 阶段实现“渲染到 Godot 纹理/材质/3D 表面”的 WebView（真实嵌入渲染管线）。
 - NG4：在 MVP 阶段提供完整的安全沙箱策略（只提供必要的 allowlist 钩子与默认安全提示）。
 
 ## 4) 术语与口径（Glossary / Contracts）
@@ -67,6 +68,7 @@
 | REQ-007 | 提供最小可观测性：关键事件日志（导航、命令开始/结束、超时、IPC 错误） | 出错时日志包含 request_id 与错误摘要 | 人工复现 + 日志检查 | P1 | 日志噪音控制 |
 | REQ-008 | Android：在导出 App 中可运行同一套 GDScript API（子集一致） | 同一 demo 在 Android 上可跑通 | Android instrumentation / 手动验证 | P2 | UI 线程、生命周期 |
 | REQ-009 | 安全边界：提供 allowlist/denylist 钩子控制导航（可选） | 禁止的 URL 不会被加载 | 集成测试（v2） | P2 | URL 规范化 |
+| REQ-010 | Windows 可视 UI：提供 `start_view/set_view_rect` + 一个可挂载的 `WryView(Control)`，在 2D/3D 场景中覆盖显示 WebView（占屏幕 2/3） | 运行 demo 时，WebView 可见且随 UI 尺寸变化更新 | Windows Godot 运行：`res://demo/ui_view_2d.tscn` 与 `res://demo/ui_view_3d.tscn` | P1 | DPI/坐标系、原生子窗口限制 |
 
 ## 7) 约束与不接受（Constraints）
 
@@ -82,4 +84,3 @@
 ## 9) 追溯矩阵（由实施侧维护，避免漂移）
 
 见 `docs/plan/v1-index.md` 的“追溯矩阵”小节。
-

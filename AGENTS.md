@@ -7,12 +7,16 @@ This repo builds a **Godot 4.6 GDExtension plugin** (Rust) that embeds a WebView
 ### Areas
 
 - Godot project (demo + plugin host): `godot-wry-playwright/`
-  - main scene: `godot-wry-playwright/demo/demo.tscn`
-  - demo script: `godot-wry-playwright/demo/demo.gd`
+  - main scene: `godot-wry-playwright/demo/ui_view_2d.tscn`
+  - demos:
+    - headless-ish: `godot-wry-playwright/demo/demo.tscn`
+    - visible 2D: `godot-wry-playwright/demo/ui_view_2d.tscn`
+    - visible 3D: `godot-wry-playwright/demo/ui_view_3d.tscn`
   - extension registration: `godot-wry-playwright/project.godot` (`[gdextension]` section)
 - Plugin (Godot-side entry):
   - `.gdextension`: `godot-wry-playwright/addons/godot_wry_playwright/godot_wry_playwright.gdextension`
   - binaries (copied artifacts): `godot-wry-playwright/addons/godot_wry_playwright/bin/`
+  - GDScript UI wrapper (native overlay): `godot-wry-playwright/addons/godot_wry_playwright/wry_view.gd` (`WryView`)
 - Rust workspace:
   - core protocol + JS shim (cross-platform, unit-tested): `crates/godot_wry_playwright_core/`
   - Godot extension crate (GDExtension classes): `crates/godot_wry_playwright/`
@@ -89,7 +93,7 @@ Manual acceptance is currently done by running the demo scene in Godot 4.6 on Wi
 
 - Build + copy DLL from WSL2 (cross-compile):  
   - `bash scripts/build_windows_wsl.sh`
-- Then open `godot-wry-playwright/` in Godot and run (main scene is `res://demo/demo.tscn`).
+- Then open `godot-wry-playwright/` in Godot and run (main scene is `res://demo/ui_view_2d.tscn`).
 
 Notes:
 - WSL2 cross-compile produces a **Windows-GNU** DLL. If Godot fails to load it due to missing runtime DLLs, prefer the **CI Windows artifact** (MSVC) from `.github/workflows/build-windows.yml`.
@@ -107,4 +111,3 @@ When adding automated Godot tests, keep them deterministic and avoid external ne
 - WSL2 → Windows DLL build: `scripts/build_windows_wsl.sh`
 - Windows local copy step: `scripts/copy_bins.ps1`
 - CI builds Windows artifact: `.github/workflows/build-windows.yml`
-

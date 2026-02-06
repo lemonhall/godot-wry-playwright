@@ -18,6 +18,7 @@ Languages: `README.zh-CN.md`
 - A reusable, importable Godot plugin (`addons/...`) with a small GDScript-facing API.
 - A `wry`-powered WebView running in-process.
 - DOM automation implemented by **JS injection + IPC**.
+- (Windows MVP) A **visible WebView overlay** mode: a native child-window WebView that can be positioned/sized from Godot UI.
 
 **This is not:**
 - A browser automation framework with Playwright’s full feature set (network interception, HAR, tracing, stable locators, etc.).
@@ -86,6 +87,14 @@ From repo root (PowerShell):
 - Build the extension: `cargo build -p godot_wry_playwright --release`
 - Copy the DLL into the Godot project: `powershell -ExecutionPolicy Bypass -File scripts/copy_bins.ps1 -Profile release`
 - Open `godot-wry-playwright/` in Godot 4.6 and run the demo (main scene).
+
+## Demos
+
+- Headless-ish automation: `res://demo/demo.tscn`
+- Visible UI (2D): `res://demo/ui_view_2d.tscn` (left 2/3 of window)
+- Visible UI (3D): `res://demo/ui_view_3d.tscn` (overlay via `CanvasLayer`)
+
+Note: the visible mode is a **native child-window overlay**, not a texture rendered by Godot.
 
 ## License
 

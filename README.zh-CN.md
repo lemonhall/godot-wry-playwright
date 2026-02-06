@@ -18,6 +18,7 @@
 - 一个可复用、可导入的 Godot 插件（`addons/...`）+ 小而清晰的 GDScript API
 - 进程内运行的 `wry` WebView
 - 通过 **JS 注入 + IPC** 实现的 DOM 自动化
+-（Windows MVP）提供一个**可视 WebView overlay**：原生子窗口 WebView，可由 Godot UI 控制位置与尺寸
 
 **这不是什么：**
 - 具备 Playwright 全量能力的浏览器自动化框架（网络拦截、HAR、tracing、稳定 Locator 等不在 MVP 范围）
@@ -86,6 +87,14 @@ MVP 目标接口：
 - 编译扩展：`cargo build -p godot_wry_playwright --release`
 - 拷贝 DLL 到 Godot 工程：`powershell -ExecutionPolicy Bypass -File scripts/copy_bins.ps1 -Profile release`
 - 用 Godot 4.6 打开 `godot-wry-playwright/` 并运行 demo（已设为主场景）。
+
+## Demos
+
+- “类 headless”自动化：`res://demo/demo.tscn`
+- 可视 UI（2D）：`res://demo/ui_view_2d.tscn`（窗口左侧 2/3）
+- 可视 UI（3D）：`res://demo/ui_view_3d.tscn`（通过 `CanvasLayer` 叠加）
+
+提示：可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
 
 ## 许可证
 

@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://demo/visible_2d.gd" id="1"]
+
+[node name="Visible2D" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Bg" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.08, 0.09, 1)
+
+[node name="BrowserHolder" type="Panel" parent="."]
+unique_name_in_owner = true
+anchors_preset = 10
+anchor_right = 0.666667
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+
+[node name="Hint" type="Label" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+text = "Left 2/3 is native WebView overlay. Close the project to rebuild DLL (otherwise file is locked)."
+autowrap_mode = 3
+vertical_alignment = 0
+

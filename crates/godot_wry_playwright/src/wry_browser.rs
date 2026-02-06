@@ -24,6 +24,7 @@ mod backend {
   use tao::event::{Event, StartCause};
   use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
   use tao::platform::windows::EventLoopBuilderExtWindows;
+  use tao::platform::windows::WindowBuilderExtWindows;
   use tao::window::WindowBuilder;
   use wry::{http::Request, PageLoadEvent, WebView, WebViewBuilder};
 
@@ -34,6 +35,9 @@ mod backend {
 
   #[derive(Debug, Clone)]
   pub(super) enum UserEvent {
+    InitHidden,
+    InitChild { parent_hwnd: isize, x: i32, y: i32, w: i32, h: i32 },
+    SetViewRect { x: i32, y: i32, w: i32, h: i32 },
     JsCommand { id: i64, cmd: Command, timeout_ms: u64 },
     Goto { id: i64, url: String, timeout_ms: u64 },
     Ipc(String),
@@ -60,36 +64,21 @@ mod backend {
       let proxy = event_loop.create_proxy();
       let _ = proxy_tx.send(proxy.clone());
 
-      let window = WindowBuilder::new()
-        .with_title("godot-wry-playwright (hidden)")
-        .with_visible(false)
-        .build(&event_loop)
-        .expect("create hidden window");
-
-      let proxy_ipc = proxy.clone();
-      let ipc_handler = move |req: Request<String>| {
-        let body = req.body().to_string();
-        let _ = proxy_ipc.send_event(UserEvent::Ipc(body));
-      };
-
-      let proxy_load = proxy.clone();
-      let page_load_handler = move |event: PageLoadEvent, url: String| {
-        if matches!(event, PageLoadEvent::Finished) {
-          let _ = proxy_load.send_event(UserEvent::PageLoadFinished(url));
-        }
-      };
-
-      let mut webview: WebView = WebViewBuilder::new()
-        .with_initialization_script(automation_shim_js())
-        .with_ipc_handler(ipc_handler)
-        .with_on_page_load_handler(page_load_handler)
-        .build(&window)
-        .expect("build webview");
-
       let start = Instant::now();
       let mut pending = PendingRequests::new();
       let mut pending_kind: HashMap<i64, &'static str> = Default::default();
       let mut goto_pending: Option<i64> = None;
+      let mut window: Option<tao::window::Window> = None;
+      let mut webview: Option<WebView> = None;
+
+      fn send_error(resp_tx: &mpsc::Sender<BrowserResponse>, request_id: i64, error: impl ToString) {
+        let _ = resp_tx.send(BrowserResponse {
+          request_id,
+          ok: false,
+          result_json: "null".to_string(),
+          error: error.to_string(),
+        });
+      }
 
       // A small ticker to drive timeouts even when the window is hidden.
       let tick_proxy = proxy.clone();
@@ -108,39 +97,126 @@ mod backend {
           Event::UserEvent(UserEvent::Stop) => {
             *control_flow = ControlFlow::Exit;
           }
+          Event::UserEvent(UserEvent::InitHidden) => {
+            if webview.is_some() {
+              return;
+            }
+
+            let w = WindowBuilder::new()
+              .with_title("godot-wry-playwright (hidden)")
+              .with_visible(false)
+              .build(&_target)
+              .expect("create hidden window");
+
+            let proxy_ipc = proxy.clone();
+            let ipc_handler = move |req: Request<String>| {
+              let body = req.body().to_string();
+              let _ = proxy_ipc.send_event(UserEvent::Ipc(body));
+            };
+
+            let proxy_load = proxy.clone();
+            let page_load_handler = move |event: PageLoadEvent, url: String| {
+              if matches!(event, PageLoadEvent::Finished) {
+                let _ = proxy_load.send_event(UserEvent::PageLoadFinished(url));
+              }
+            };
+
+            let wv = WebViewBuilder::new()
+              .with_initialization_script(automation_shim_js())
+              .with_ipc_handler(ipc_handler)
+              .with_on_page_load_handler(page_load_handler)
+              .build(&w)
+              .expect("build webview");
+
+            window = Some(w);
+            webview = Some(wv);
+          }
+          Event::UserEvent(UserEvent::InitChild { parent_hwnd, x, y, w, h }) => {
+            if webview.is_some() {
+              return;
+            }
+
+            if parent_hwnd == 0 {
+              send_error(&resp_tx, -1, "missing parent_hwnd");
+              return;
+            }
+
+            let child = WindowBuilder::new()
+              .with_title("godot-wry-playwright (view)")
+              .with_visible(true)
+              .with_decorations(false)
+              .with_parent_window(parent_hwnd)
+              .with_inner_size(tao::dpi::LogicalSize::new(w.max(1), h.max(1)))
+              .with_position(tao::dpi::LogicalPosition::new(x, y))
+              .build(&_target)
+              .expect("create child window");
+
+            let proxy_ipc = proxy.clone();
+            let ipc_handler = move |req: Request<String>| {
+              let body = req.body().to_string();
+              let _ = proxy_ipc.send_event(UserEvent::Ipc(body));
+            };
+
+            let proxy_load = proxy.clone();
+            let page_load_handler = move |event: PageLoadEvent, url: String| {
+              if matches!(event, PageLoadEvent::Finished) {
+                let _ = proxy_load.send_event(UserEvent::PageLoadFinished(url));
+              }
+            };
+
+            let wv = WebViewBuilder::new()
+              .with_initialization_script(automation_shim_js())
+              .with_ipc_handler(ipc_handler)
+              .with_on_page_load_handler(page_load_handler)
+              .build(&child)
+              .expect("build webview");
+
+            window = Some(child);
+            webview = Some(wv);
+          }
+          Event::UserEvent(UserEvent::SetViewRect { x, y, w, h }) => {
+            if let Some(wnd) = &window {
+              let _ = wnd.set_outer_position(tao::dpi::LogicalPosition::new(x, y));
+              wnd.set_inner_size(tao::dpi::LogicalSize::new(w.max(1), h.max(1)));
+            }
+          }
           Event::UserEvent(UserEvent::Goto { id, url, timeout_ms }) => {
+            let Some(wv) = &webview else {
+              pending.complete(id);
+              pending_kind.remove(&id);
+              send_error(&resp_tx, id, "webview_not_started");
+              return;
+            };
+
             let now_ms = start.elapsed().as_millis() as u64;
             pending.insert(id, now_ms, timeout_ms);
             pending_kind.insert(id, "goto");
             goto_pending = Some(id);
 
-            if let Err(e) = webview.load_url(&url) {
+            if let Err(e) = wv.load_url(&url) {
               pending.complete(id);
               pending_kind.remove(&id);
               goto_pending = None;
-              let _ = resp_tx.send(BrowserResponse {
-                request_id: id,
-                ok: false,
-                result_json: "null".to_string(),
-                error: e.to_string(),
-              });
+              send_error(&resp_tx, id, e);
             }
           }
           Event::UserEvent(UserEvent::JsCommand { id, cmd, timeout_ms }) => {
+            let Some(wv) = &webview else {
+              pending.complete(id);
+              pending_kind.remove(&id);
+              send_error(&resp_tx, id, "webview_not_started");
+              return;
+            };
+
             let now_ms = start.elapsed().as_millis() as u64;
             pending.insert(id, now_ms, timeout_ms);
             pending_kind.insert(id, "js");
 
             let script = build_dispatch_script(&id.to_string(), cmd);
-            if let Err(e) = webview.evaluate_script(&script) {
+            if let Err(e) = wv.evaluate_script(&script) {
               pending.complete(id);
               pending_kind.remove(&id);
-              let _ = resp_tx.send(BrowserResponse {
-                request_id: id,
-                ok: false,
-                result_json: "null".to_string(),
-                error: e.to_string(),
-              });
+              send_error(&resp_tx, id, e);
             }
           }
           Event::UserEvent(UserEvent::Ipc(body)) => match parse_ipc_envelope(&body) {
@@ -291,33 +367,43 @@ impl WryBrowser {
   #[signal]
   fn completed(request_id: i64, ok: bool, result_json: String, error: String);
 
+  #[cfg(windows)]
+  fn ensure_backend(&mut self) -> bool {
+    if self.proxy.is_some() {
+      return true;
+    }
+    match backend::spawn() {
+      Ok(handle) => {
+        self.proxy = Some(handle.proxy);
+        self.rx = Some(handle.rx);
+        self.join = Some(handle.join);
+        true
+      }
+      Err(e) => {
+        let args = [
+          StringName::from("completed").to_variant(),
+          (-1_i64).to_variant(),
+          false.to_variant(),
+          "null".to_variant(),
+          e.to_variant(),
+        ];
+        self.base_mut().call_deferred("emit_signal", &args);
+        false
+      }
+    }
+  }
+
   #[func]
   fn start(&mut self) -> bool {
     #[cfg(windows)]
     {
-      if self.proxy.is_some() {
-        return true;
+      if !self.ensure_backend() {
+        return false;
       }
-
-      match backend::spawn() {
-        Ok(handle) => {
-          self.proxy = Some(handle.proxy);
-          self.rx = Some(handle.rx);
-          self.join = Some(handle.join);
-          true
-        }
-        Err(e) => {
-          let args = [
-            StringName::from("completed").to_variant(),
-            (-1_i64).to_variant(),
-            false.to_variant(),
-            "null".to_variant(),
-            e.to_variant(),
-          ];
-          self.base_mut().call_deferred("emit_signal", &args);
-          false
-        }
+      if let Some(proxy) = &self.proxy {
+        let _ = proxy.send_event(backend::UserEvent::InitHidden);
       }
+      true
     }
 
     #[cfg(not(windows))]
@@ -325,6 +411,43 @@ impl WryBrowser {
       let _ = backend::spawn().map(|h| self.rx = Some(h.rx));
       false
     }
+  }
+
+  #[func]
+  fn start_view(&mut self, x: i32, y: i32, w: i32, h: i32) -> bool {
+    #[cfg(windows)]
+    {
+      if !self.ensure_backend() {
+        return false;
+      }
+
+      let parent_hwnd = godot::classes::DisplayServer::singleton()
+        .window_get_native_handle(godot::classes::display_server::HandleType::WINDOW_HANDLE) as isize;
+
+      if let Some(proxy) = &self.proxy {
+        let _ = proxy.send_event(backend::UserEvent::InitChild { parent_hwnd, x, y, w, h });
+        return true;
+      }
+
+      false
+    }
+
+    #[cfg(not(windows))]
+    {
+      let _ = (x, y, w, h);
+      false
+    }
+  }
+
+  #[func]
+  fn set_view_rect(&mut self, x: i32, y: i32, w: i32, h: i32) {
+    #[cfg(windows)]
+    if let Some(proxy) = &self.proxy {
+      let _ = proxy.send_event(backend::UserEvent::SetViewRect { x, y, w, h });
+    }
+
+    #[cfg(not(windows))]
+    let _ = (x, y, w, h);
   }
 
   #[func]
