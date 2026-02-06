@@ -19,7 +19,7 @@ const CAPTURE_W := 1024
 const CAPTURE_H := 768
 const CAPTURE_FPS := 3
 const FREEZE_AFTER_FIRST_FRAME := true
-const TARGET_URL := "https://example.com"
+const TARGET_URL := "https://www.baidu.com/"
 
 const REVEAL_SPEED := 0.45 # ~2.2s to full reveal (visual simulation)
 const ORBIT_SENS := 0.008
@@ -166,4 +166,5 @@ func _update_camera_transform() -> void:
 func _screen_material() -> ShaderMaterial:
 	var mat := screen.get_active_material(0) as ShaderMaterial
 	if mat == null:
-		push_warning("WebSc
+		push_warning("WebScreen material is not a ShaderMaterial")
+	return mat

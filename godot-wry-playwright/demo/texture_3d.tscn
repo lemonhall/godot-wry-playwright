@@ -1,34 +1,35 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://d25h2kqnnxhj8"]
 
-[ext_resource type="Script" path="res://demo/texture_3d.gd" id="1"]
-[ext_resource type="Shader" path="res://demo/texture_reveal.gdshader" id="2"]
-[ext_resource type="PackedScene" path="res://assets/models/computer/Computer.glb" id="3"]
+[ext_resource type="Script" uid="uid://cyc6o3bjvopwg" path="res://demo/texture_3d.gd" id="1"]
+[ext_resource type="Shader" uid="uid://cruq0b3i7x4l1" path="res://demo/texture_reveal.gdshader" id="2"]
+[ext_resource type="PackedScene" uid="uid://c7vg2pepto3ia" path="res://assets/models/computer/Computer.glb" id="3"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+render_priority = 0
+shader = ExtResource("2")
+shader_parameter/reveal = 1.0
 
 [sub_resource type="QuadMesh" id="QuadMesh_1"]
 size = Vector2(2.75, 1.72)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
-shader = ExtResource("2")
-
-[node name="Texture3D" type="Node3D"]
+[node name="Texture3D" type="Node3D" unique_id=96635393]
 script = ExtResource("1")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=676579079]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 5.4)
-near = 0.05
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0, 3.0, 2.5)
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1809134566]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0, 3, 2.5)
 light_energy = 1.2
 
-[node name="ComputerRoot" type="Node3D" parent="."]
+[node name="ComputerRoot" type="Node3D" parent="." unique_id=1785209387]
 
-[node name="ComputerModel" parent="ComputerRoot" instance=ExtResource("3")]
+[node name="ComputerModel" parent="ComputerRoot" unique_id=995141359 instance=ExtResource("3")]
 transform = Transform3D(0.01, 0, 0, 0, 0.01, 0, 0, 0, 0.01, 0, 0, 0)
 
-[node name="WebScreen" type="MeshInstance3D" parent="ComputerRoot"]
+[node name="WebScreen" type="MeshInstance3D" parent="ComputerRoot" unique_id=1114221005]
 unique_name_in_owner = true
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.46, 0.385)
-mesh = SubResource("QuadMesh_1")
+transform = Transform3D(1.2942085, 0, 0, 0, 1.184463, 0, 0, 0, 1, 0.005497873, 1.6774213, 0.07280445)
 material_override = SubResource("ShaderMaterial_1")
+mesh = SubResource("QuadMesh_1")
