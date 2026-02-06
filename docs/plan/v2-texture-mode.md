@@ -8,6 +8,10 @@ Add a third runtime mode that makes WebView content usable in 3D: capture the We
 
 PRD Trace: REQ-011
 
+Follow-up slice for scene integration and controls is tracked in:
+
+- `docs/plan/v2-computer-scene-integration.md` (REQ-012/013/014/015)
+
 ## Scope
 
 ### In scope (v2 MVP)
@@ -28,9 +32,11 @@ PRD Trace: REQ-011
 
 ## Acceptance (binary)
 
-- A1: In `res://demo/texture_3d.tscn`, a cube face shows the `https://example.com` page updating at a fixed FPS (>= 2 FPS).
+- A1: In `res://demo/texture_3d.tscn`, the computer monitor overlay surface shows the `https://example.com` page.
 - A2: The demo visually shows a “top-to-bottom reveal” effect when updating frames.
 - A3: The plugin API keeps modes isolated: texture mode is a separate class/API surface (no breaking changes to `WryBrowser` / `WryView`).
+
+Follow-up acceptance for model placement, camera controls, and key reload is defined in `docs/plan/v2-computer-scene-integration.md`.
 
 ## Verification
 
