@@ -8,4 +8,3 @@ func _ready() -> void:
 		print("completed id=", id, " ok=", ok, " result_json=", result_json, " error=", error)
 	)
 	view.goto("https://example.com", 10_000)
-

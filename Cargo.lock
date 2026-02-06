@@ -897,6 +897,7 @@ dependencies = [
  "serde_json",
  "tao",
  "thiserror 2.0.18",
+ "windows",
  "wry",
 ]
 

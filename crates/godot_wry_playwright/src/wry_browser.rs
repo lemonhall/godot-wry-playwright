@@ -25,13 +25,32 @@ mod backend {
   use tao::event_loop::{ControlFlow, EventLoopBuilder, EventLoopProxy};
   use tao::platform::windows::EventLoopBuilderExtWindows;
   use tao::platform::windows::WindowBuilderExtWindows;
+  use tao::platform::windows::WindowExtWindows;
   use tao::window::WindowBuilder;
+  use windows::Win32::Foundation::HWND;
+  use windows::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_ASYNCWINDOWPOS, SWP_NOACTIVATE, SWP_NOZORDER};
   use wry::{http::Request, PageLoadEvent, WebView, WebViewBuilder};
 
   use crate::pending::PendingRequests;
   use godot_wry_playwright_core::protocol::{
     automation_shim_js, build_dispatch_script, parse_ipc_envelope, Command,
   };
+
+  fn set_child_hwnd_rect(hwnd: isize, x: i32, y: i32, w: i32, h: i32) {
+    let width = w.max(1);
+    let height = h.max(1);
+    unsafe {
+      let _ = SetWindowPos(
+        HWND(hwnd as _),
+        None,
+        x,
+        y,
+        width,
+        height,
+        SWP_ASYNCWINDOWPOS | SWP_NOZORDER | SWP_NOACTIVATE,
+      );
+    }
+  }
 
   #[derive(Debug, Clone)]
   pub(super) enum UserEvent {
@@ -146,10 +165,12 @@ mod backend {
               .with_visible(true)
               .with_decorations(false)
               .with_parent_window(parent_hwnd)
-              .with_inner_size(tao::dpi::LogicalSize::new(w.max(1), h.max(1)))
-              .with_position(tao::dpi::LogicalPosition::new(x, y))
               .build(&_target)
               .expect("create child window");
+
+            // NOTE: Tao's `set_inner_size` uses AdjustWindowRect, which can behave unexpectedly
+            // for `WS_CHILD` windows. Use Win32 directly for consistent sizing/positioning.
+            set_child_hwnd_rect(child.hwnd(), x, y, w, h);
 
             let proxy_ipc = proxy.clone();
             let ipc_handler = move |req: Request<String>| {
@@ -176,8 +197,7 @@ mod backend {
           }
           Event::UserEvent(UserEvent::SetViewRect { x, y, w, h }) => {
             if let Some(wnd) = &window {
-              let _ = wnd.set_outer_position(tao::dpi::LogicalPosition::new(x, y));
-              wnd.set_inner_size(tao::dpi::LogicalSize::new(w.max(1), h.max(1)));
+              set_child_hwnd_rect(wnd.hwnd(), x, y, w, h);
             }
           }
           Event::UserEvent(UserEvent::Goto { id, url, timeout_ms }) => {

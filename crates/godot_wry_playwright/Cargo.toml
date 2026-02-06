@@ -17,4 +17,4 @@ godot = "0.2"
 [target.'cfg(windows)'.dependencies]
 wry = "0.54.1"
 tao = "0.34"
-
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
