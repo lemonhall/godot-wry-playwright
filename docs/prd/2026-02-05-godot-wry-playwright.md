@@ -69,6 +69,7 @@
 | REQ-008 | Android：在导出 App 中可运行同一套 GDScript API（子集一致） | 同一 demo 在 Android 上可跑通 | Android instrumentation / 手动验证 | P2 | UI 线程、生命周期 |
 | REQ-009 | 安全边界：提供 allowlist/denylist 钩子控制导航（可选） | 禁止的 URL 不会被加载 | 集成测试（v2） | P2 | URL 规范化 |
 | REQ-010 | Windows 可视 UI：提供 `start_view/set_view_rect` + 一个可挂载的 `WryView(Control)`，在 2D/3D 场景中覆盖显示 WebView（占屏幕 2/3） | 运行 demo 时，WebView 可见且随 UI 尺寸变化更新 | Windows Godot 运行：`res://demo/ui_view_2d.tscn` 与 `res://demo/ui_view_3d.tscn` | P1 | DPI/坐标系、原生子窗口限制 |
+| REQ-011 | 3D“模拟渲染”模式：周期性捕获 WebView 帧（PNG/bitmap）并更新为 Godot 纹理，用于贴到 3D 模型表面（例如立方体某一面） | 运行 3D demo 时，网页画面能以固定 FPS 更新到模型材质上；并可模拟“从上到下逐步渲染”效果 | Windows Godot 运行：`res://demo/texture_3d.tscn`（v2） | P1 | 性能/延迟、交互坐标反算、WebView2 CapturePreview 依赖 |
 
 ## 7) 约束与不接受（Constraints）
 

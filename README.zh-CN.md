@@ -19,6 +19,7 @@
 - 进程内运行的 `wry` WebView
 - 通过 **JS 注入 + IPC** 实现的 DOM 自动化
 -（Windows MVP）提供一个**可视 WebView overlay**：原生子窗口 WebView，可由 Godot UI 控制位置与尺寸
+-（Windows only，计划中）提供一个**3D“模拟渲染”模式**：周期性捕获 WebView 画面并作为纹理贴到 3D 场景（非实时 GPU 嵌入）
 
 **这不是什么：**
 - 具备 Playwright 全量能力的浏览器自动化框架（网络拦截、HAR、tracing、稳定 Locator 等不在 MVP 范围）
@@ -93,8 +94,17 @@ MVP 目标接口：
 - “类 headless”自动化：`res://demo/demo.tscn`
 - 可视 UI（2D）：`res://demo/ui_view_2d.tscn`（窗口左侧 2/3）
 - 可视 UI（3D）：`res://demo/ui_view_3d.tscn`（通过 `CanvasLayer` 叠加）
+- 贴图模式（3D 模拟渲染，Windows-only）：`res://demo/texture_3d.tscn`
 
 提示：可视模式是**原生子窗口 overlay**，不是渲染到 Godot 纹理的浏览器。
+
+## 运行模式（路线图）
+
+本项目目标演进为 3 种运行模式：
+
+1）`headless`：创建隐藏/离屏的原生窗口，用于自动化（桌面端友好）  
+2）`view（2D UI）`：原生 WebView overlay，尺寸/位置由 Godot `Control` 驱动  
+3）`texture（3D 模拟）`：捕获 WebView 帧（PNG）并更新 Godot 纹理/材质（Windows-only、低 FPS、高延迟）
 
 ## 许可证
 

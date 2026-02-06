@@ -19,6 +19,7 @@ Languages: `README.zh-CN.md`
 - A `wry`-powered WebView running in-process.
 - DOM automation implemented by **JS injection + IPC**.
 - (Windows MVP) A **visible WebView overlay** mode: a native child-window WebView that can be positioned/sized from Godot UI.
+- (Windows-only, planned) A **3D “simulated render”** mode: periodically capture the WebView to an image and use it as a texture in 3D (not real-time GPU embedding).
 
 **This is not:**
 - A browser automation framework with Playwright’s full feature set (network interception, HAR, tracing, stable locators, etc.).
@@ -93,8 +94,17 @@ From repo root (PowerShell):
 - Headless-ish automation: `res://demo/demo.tscn`
 - Visible UI (2D): `res://demo/ui_view_2d.tscn` (left 2/3 of window)
 - Visible UI (3D): `res://demo/ui_view_3d.tscn` (overlay via `CanvasLayer`)
+- Texture (3D simulated render, Windows-only): `res://demo/texture_3d.tscn`
 
 Note: the visible mode is a **native child-window overlay**, not a texture rendered by Godot.
+
+## Modes (roadmap)
+
+This project is evolving toward 3 runtime modes:
+
+1) `headless`: create an off-screen/hidden native window and run automation (desktop-friendly)
+2) `view (2D UI)`: show a native WebView overlay sized/positioned by a Godot `Control`
+3) `texture (3D simulated)`: capture WebView frames (PNG) and update a Godot texture/material (Windows-only, lower FPS, higher latency)
 
 ## License
 
